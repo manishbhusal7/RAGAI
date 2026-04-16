@@ -1,0 +1,387 @@
+/* VSCode-like Code Block Styling with Enhanced Readability */
+.code-block-container {
+  margin: 1rem 0;
+  border-radius: 12px;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  overflow: hidden;
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 215, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  font-family: 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
+  
+  /* Key fix: Set reasonable max-width like modern LLMs */
+  max-width: min(75ch, 600px);
+  width: fit-content;
+  min-width: 300px;
+  position: relative;
+}
+
+.code-block-container::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, 
+    rgba(255, 215, 0, 0.3), 
+    rgba(0, 123, 255, 0.2), 
+    rgba(255, 215, 0, 0.3)
+  );
+  border-radius: 14px;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.code-block-container:hover::before {
+  opacity: 1;
+}
+
+.code-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.875rem 1.25rem;
+  background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+  border-bottom: 1px solid #21262d;
+  min-width: 0;
+  position: relative;
+}
+
+.code-block-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 215, 0, 0.4) 50%, 
+    transparent
+  );
+}
+
+.code-block-info {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  min-width: 0;
+}
+
+.code-block-dots {
+  display: flex;
+  gap: 0.375rem;
+  flex-shrink: 0;
+}
+
+.dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  position: relative;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+}
+
+.dot::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), transparent 70%);
+}
+
+.dot.red {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+  box-shadow: 0 0 12px rgba(255, 107, 107, 0.4);
+}
+
+.dot.yellow {
+  background: linear-gradient(135deg, #ffd93d 0%, #f39c12 100%);
+  box-shadow: 0 0 12px rgba(255, 217, 61, 0.4);
+}
+
+.dot.green {
+  background: linear-gradient(135deg, #6bcf7f 0%, #27ae60 100%);
+  box-shadow: 0 0 12px rgba(107, 207, 127, 0.4);
+}
+
+.code-block-language {
+  color: #ffd700;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+  padding: 0.25rem 0.75rem;
+  background: rgba(255, 215, 0, 0.1);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.copy-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(0, 123, 255, 0.1) 100%);
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  color: #ffd700;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-weight: 500;
+  text-shadow: 0 0 4px rgba(255, 215, 0, 0.3);
+}
+
+.copy-button:hover {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(0, 123, 255, 0.2) 100%);
+  border-color: rgba(255, 215, 0, 0.6);
+  color: #ffffff;
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+.copy-button.copied {
+  background: linear-gradient(135deg, rgba(40, 167, 69, 0.2) 0%, rgba(34, 139, 34, 0.2) 100%);
+  border-color: rgba(40, 167, 69, 0.6);
+  color: #40c975;
+  box-shadow: 0 0 16px rgba(40, 167, 69, 0.4);
+}
+
+.copy-button-text {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.code-block-content {
+  background: #0d1117;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-width: 100%;
+  max-height: 400px;
+  position: relative;
+  border-radius: 0 0 12px 12px;
+}
+
+/* Enhanced code styling with better readability */
+.code-block-content pre {
+  max-width: none !important;
+  overflow: visible !important;
+  margin: 0 !important;
+  background: transparent !important;
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+  padding: 1.5rem !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+  font-family: 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace !important;
+  color: #e6edf3 !important;
+  /* Ensure content doesn't exceed container width */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.code-block-content code {
+  background: transparent !important;
+  max-width: none !important;
+  word-wrap: break-word !important;
+  white-space: pre-wrap !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  display: block !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  color: inherit !important;
+  /* Ensure code respects container bounds */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Line number styling for better code visualization */
+.code-block-content .token {
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.1);
+}
+
+.code-block-content .token.comment {
+  color: #7c7c7c !important;
+  font-style: italic;
+}
+
+.code-block-content .token.string {
+  color: #a5d6ff !important;
+  text-shadow: 0 0 4px rgba(165, 214, 255, 0.3);
+}
+
+.code-block-content .token.number {
+  color: #79c0ff !important;
+  text-shadow: 0 0 4px rgba(121, 192, 255, 0.3);
+}
+
+.code-block-content .token.keyword {
+  color: #ff7b72 !important;
+  font-weight: 600;
+  text-shadow: 0 0 4px rgba(255, 123, 114, 0.3);
+}
+
+.code-block-content .token.function {
+  color: #d2a8ff !important;
+  text-shadow: 0 0 4px rgba(210, 168, 255, 0.3);
+}
+
+.code-block-content .token.operator {
+  color: #ffa657 !important;
+  text-shadow: 0 0 4px rgba(255, 166, 87, 0.3);
+}
+
+.code-block-content .token.punctuation {
+  color: #e6edf3 !important;
+}
+
+/* Custom scrollbar with glow effect */
+.code-block-content::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.code-block-content::-webkit-scrollbar-track {
+  background: #161b22;
+  border-radius: 6px;
+}
+
+.code-block-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.4) 0%, rgba(0, 123, 255, 0.4) 100%);
+  border-radius: 6px;
+  border: 2px solid #161b22;
+}
+
+.code-block-content::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.6) 0%, rgba(0, 123, 255, 0.6) 100%);
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+}
+
+.code-block-content::-webkit-scrollbar-corner {
+  background: #161b22;
+}
+
+/* Inline code styling */
+.inline-code {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(0, 123, 255, 0.1) 100%);
+  color: #ffd700;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-family: 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.9em;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  word-break: normal;
+  white-space: normal;
+  display: inline;
+  text-shadow: 0 0 4px rgba(255, 215, 0, 0.4);
+  font-weight: 500;
+  line-height: inherit;
+}
+
+/* For user messages, adjust inline code colors */
+.user-message .inline-code {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 215, 0, 0.15) 100%);
+  color: #ffd700;
+  border-color: rgba(255, 215, 0, 0.4);
+  text-shadow: 0 0 6px rgba(255, 215, 0, 0.5);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .code-block-container {
+    margin: 0.75rem 0;
+    min-width: 280px;
+    max-width: min(70ch, calc(100vw - 100px));
+  }
+  
+  .code-block-header {
+    padding: 0.75rem 1rem;
+  }
+  
+  .copy-button-text {
+    display: none;
+  }
+  
+  .code-block-content {
+    max-height: 300px;
+  }
+  
+  .code-block-content pre {
+    padding: 1rem !important;
+    font-size: 13px !important;
+  }
+  
+  .code-block-info {
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .code-block-container {
+    min-width: 250px;
+    max-width: min(60ch, calc(100vw - 60px));
+  }
+  
+  .code-block-content {
+    max-height: 250px;
+  }
+  
+  .code-block-content pre {
+    padding: 0.875rem !important;
+    font-size: 12px !important;
+  }
+  
+  .copy-button {
+    padding: 0.375rem 0.75rem;
+  }
+}
+
+/* Loading state for copy button */
+.copy-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Focus styles for accessibility */
+.copy-button:focus {
+  outline: 2px solid #ffd700;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.2);
+}
+
+/* Ensure the code block doesn't break chat message layout */
+.message-content .code-block-container {
+  max-width: min(75ch, 600px);
+  width: fit-content;
+}
+
+/* Enhanced glow effect for code content */
+.code-block-content:hover {
+  box-shadow: inset 0 0 20px rgba(255, 215, 0, 0.05);
+}
+
+/* Line highlighting on hover */
+.code-block-content pre:hover {
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 215, 0, 0.02) 20%, 
+    rgba(255, 215, 0, 0.02) 80%, 
+    transparent 100%) !important;
+} 
