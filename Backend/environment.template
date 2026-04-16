@@ -1,0 +1,22 @@
+# Copy this file to .env and fill in your actual values
+# Azure Configuration
+AZURE_BLOB_CONNECTION_STRING=your_azure_blob_connection_string_here
+AZURE_BLOB_CONTAINER=your_container_name
+AZURE_OPENAI_ENDPOINT=https://your-openai-resource.openai.azure.com/
+AZURE_OPENAI_KEY=your_azure_openai_api_key
+
+# Azure Search Configuration  
+AZURE_SEARCH_ENDPOINT=https://your-search-service.search.windows.net
+AZURE_SEARCH_INDEX_NAME=your_index_name
+AZURE_SEARCH_API_KEY=your_search_api_key
+
+# Confluence Configuration
+CONFLUENCE_BASE_URL=https://your-domain.atlassian.net/wiki
+CONFLUENCE_USERNAME=your_confluence_email
+CONFLUENCE_PASSWORD=your_confluence_api_token
+CONFLUENCE_SPACE_KEY=your_space_key
+
+# Microsoft Graph Configuration
+MS_GRAPH_TENANT_ID=your_tenant_id
+MS_GRAPH_CLIENT_ID=your_client_id
+MS_GRAPH_CLIENT_SECRET=your_client_secret 
