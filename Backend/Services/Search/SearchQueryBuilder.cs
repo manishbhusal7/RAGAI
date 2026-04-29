@@ -83,7 +83,7 @@ namespace Backend.Services.Search
             var finalCount = resultsCount ?? defaultCount;
 
             var filter = $"source eq '{sourceType}'";
-            
+
             // Extract date patterns from query and add title-based filtering
             var dateFilter = ExtractDateFilterFromQuery(query);
             if (!string.IsNullOrEmpty(dateFilter))
@@ -150,19 +150,19 @@ namespace Backend.Services.Search
                 "highest", "lowest", "most", "least", "fewest", "best", "worst",
                 "largest", "smallest", "biggest", "greatest", "maximum", "minimum",
                 "top", "bottom", "first", "last", "longest", "shortest",
-                
+
                 // Comparison terms
                 "compare", "comparison", "versus", "vs", "between", "difference",
                 "more than", "less than", "greater than", "better than", "worse than",
-                
+
                 // Ranking and ordering
                 "rank", "ranking", "order", "sort", "list all", "show all",
                 "which one", "which person", "which company", "which team",
-                
+
                 // Counting and totaling
                 "how many", "count", "total", "sum", "number of", "amount of",
                 "all the", "every", "each", "who all", "what all",
-                
+
                 // Statistical terms
                 "average", "median", "common", "frequent", "popular",
                 "typical", "standard", "normal", "unusual", "rare"
@@ -262,8 +262,8 @@ namespace Backend.Services.Search
             else
             {
                 strategy.PrimarySource = "confluence";
-                strategy.FallbackSources = CouldBeCalendarRelated(query) 
-                    ? new List<string> { "calendar" } 
+                strategy.FallbackSources = CouldBeCalendarRelated(query)
+                    ? new List<string> { "calendar" }
                     : new List<string>();
                 strategy.IsSpecialized = false;
             }
@@ -280,12 +280,12 @@ namespace Backend.Services.Search
         public string OptimizeQuery(string originalQuery, string sourceType)
         {
             var optimizedQuery = originalQuery.Trim();
-            
+
             // For aggregate queries, enhance with related terms to find entity-focused chunks
             if (IsAggregateQuery(originalQuery))
             {
                 var queryLower = originalQuery.ToLower();
-                
+
                 // Add terms to help find entity summaries and counts
                 if (sourceType == "uploaded" && (queryLower.Contains("affiliation") || queryLower.Contains("association")))
                 {
@@ -300,7 +300,7 @@ namespace Backend.Services.Search
                     optimizedQuery += " minimum total count";
                 }
             }
-            
+
             return optimizedQuery;
         }
 
@@ -352,16 +352,16 @@ namespace Backend.Services.Search
             var monthDayYearRegex = new System.Text.RegularExpressions.Regex(
                 @"(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(\d{4})",
                 System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-            
+
             var monthDayYearMatch = monthDayYearRegex.Match(query);
             if (monthDayYearMatch.Success)
             {
                 var month = monthDayYearMatch.Groups[1].Value.ToLowerInvariant();
                 var day = int.Parse(monthDayYearMatch.Groups[2].Value);
                 var year = monthDayYearMatch.Groups[3].Value;
-                
+
                 var monthNum = GetMonthNumber(month);
-                
+
                 // Search for multiple date formats in content
                 var dateFormats = new[]
                 {
@@ -371,10 +371,10 @@ namespace Backend.Services.Search
                     $"{month} {day}, {year}", // august 7, 2025
                     $"{month} {day} {year}" // august 7 2025
                 };
-                
-                var contentFilters = dateFormats.Select(format => 
+
+                var contentFilters = dateFormats.Select(format =>
                     $"search.ismatch('{format}', 'content')").ToArray();
-                
+
                 if (contentFilters.Length > 0)
                 {
                     filters.Add($"({string.Join(" or ", contentFilters)})");
@@ -429,4 +429,4 @@ namespace Backend.Services.Search
         public bool IsSpecialized { get; set; } = false;
         public bool IsAggregateQuery { get; set; } = false;
     }
-} 
+}
