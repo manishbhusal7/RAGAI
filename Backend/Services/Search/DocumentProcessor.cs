@@ -34,7 +34,7 @@ namespace Backend.Services.Search
             {
                 var blobClient = new BlobContainerClient(_configuration["Azure:BlobStorageConnectionString"], _configuration["Azure:BlobContainer"]);
                 var blob = blobClient.GetBlobClient(fileName);
-                
+
                 if (!await blob.ExistsAsync())
                 {
                     Console.WriteLine($"Blob {fileName} not found");
@@ -42,7 +42,7 @@ namespace Backend.Services.Search
                 }
 
                 var extension = Path.GetExtension(fileName).ToLowerInvariant();
-                
+
                 return extension switch
                 {
                     ".txt" or ".md" or ".json" or ".xml" or ".csv" => await ExtractPlainTextAsync(blob),
@@ -78,7 +78,7 @@ namespace Backend.Services.Search
         {
             using var pdfStream = await blob.OpenReadAsync();
             using var pdf = PdfDocument.Open(pdfStream);
-            
+
             var sb = new System.Text.StringBuilder();
             foreach (var page in pdf.GetPages())
             {
@@ -119,10 +119,10 @@ namespace Backend.Services.Search
         {
             using var pptStream = await blob.OpenReadAsync();
             using var ppt = PresentationDocument.Open(pptStream, false);
-            
+
             var sb = new System.Text.StringBuilder();
             var slides = ppt.PresentationPart.SlideParts;
-            
+
             foreach (var slide in slides)
             {
                 var texts = slide.Slide.Descendants<DocumentFormat.OpenXml.Drawing.Text>();
@@ -154,4 +154,4 @@ namespace Backend.Services.Search
             return GetSupportedExtensions().Contains(extension);
         }
     }
-} 
+}
