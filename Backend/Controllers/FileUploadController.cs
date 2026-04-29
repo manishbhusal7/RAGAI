@@ -42,7 +42,7 @@ namespace RAG.API.Controllers
                     Console.WriteLine($"Azure Search processing failed: {searchEx.Message}");
                 }
 
-                return Ok(new { 
+                return Ok(new {
                     fileName = file.FileName,
                     message = "File uploaded successfully"
                 });
@@ -83,7 +83,7 @@ namespace RAG.API.Controllers
             await foreach (var blobItem in blobClient.GetBlobsAsync())
             {
                 // Exclude Confluence documents and system files - only show user-uploaded files
-                if (blobItem.Name.StartsWith("confluence/") || 
+                if (blobItem.Name.StartsWith("confluence/") ||
                     blobItem.Name.StartsWith("_sync_status") ||
                     blobItem.Name.Contains("_metadata"))
                 {
