@@ -13,14 +13,14 @@ namespace Backend.Services.BackgroundServices
         private readonly TimeSpan _syncInterval;
 
         public CalendarSyncBackgroundService(
-            IServiceProvider serviceProvider, 
+            IServiceProvider serviceProvider,
             ILogger<CalendarSyncBackgroundService> logger,
             IConfiguration config)
         {
             _serviceProvider = serviceProvider;
             _logger = logger;
             _config = config;
-            
+
             // Default to sync every 2 hours, configurable via appsettings
             var intervalHours = _config.GetValue("MicrosoftGraph:SyncIntervalHours", 2);
             _syncInterval = TimeSpan.FromHours(intervalHours);
@@ -29,7 +29,7 @@ namespace Backend.Services.BackgroundServices
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             var autoSyncEnabled = _config.GetValue("MicrosoftGraph:EnableAutoSync", true);
-            
+
             if (!autoSyncEnabled)
             {
                 _logger.LogInformation("Calendar auto-sync is disabled in configuration");
@@ -63,11 +63,11 @@ namespace Backend.Services.BackgroundServices
         {
             using var scope = _serviceProvider.CreateScope();
             var calendarService = scope.ServiceProvider.GetRequiredService<CalendarService>();
-            
+
             var blobClient = new BlobContainerClient(
-                _config["Azure:BlobStorageConnectionString"], 
+                _config["Azure:BlobStorageConnectionString"],
                 _config["Azure:BlobContainer"]);
-            
+
             var searchEndpoint = new Uri(_config["AzureSearch:Endpoint"]);
             var searchApiKey = _config["AzureSearch:ApiKey"];
             var indexName = _config["AzureSearch:IndexName"];
@@ -80,7 +80,7 @@ namespace Backend.Services.BackgroundServices
 
                 // Fetch all events from calendars
                 var events = await calendarService.FetchAllEventsAsync(30); // Next 30 days
-                
+
                 if (!events.Any())
                 {
                     _logger.LogWarning("No calendar events found");
@@ -96,16 +96,16 @@ namespace Backend.Services.BackgroundServices
                     {
                         // Chunk the event content for better search
                         var chunks = calendarService.ChunkCalendarEvent(calendarEvent);
-                        
+
                         for (int i = 0; i < chunks.Count; i++)
                         {
                             var chunk = chunks[i];
                             var chunkId = $"calendar_{calendarEvent.Id}_{i}";
-                            
+
                             // Upload chunk to blob storage
                             var blobName = $"calendar/{calendarEvent.StartTime:yyyy-MM}/{chunkId}.txt";
                             var blobClientForEvent = blobClient.GetBlobClient(blobName);
-                            
+
                             using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(chunk));
                             await blobClientForEvent.UploadAsync(stream, overwrite: true);
 
@@ -135,9 +135,9 @@ namespace Backend.Services.BackgroundServices
                 // Update last sync time
                 await UpdateLastSyncTimeAsync(blobClient);
 
-                _logger.LogInformation("Calendar sync completed: {ProcessedCount}/{TotalCount} events processed", 
+                _logger.LogInformation("Calendar sync completed: {ProcessedCount}/{TotalCount} events processed",
                     processedCount, events.Count);
-                
+
                 if (errors.Any())
                 {
                     _logger.LogWarning("Calendar sync had {ErrorCount} errors", errors.Count);
@@ -190,7 +190,7 @@ namespace Backend.Services.BackgroundServices
                     {
                         var batch = documentsToDelete.Skip(i).Take(batchSize);
                         var deleteBatch = IndexDocumentsBatch.Create<SearchDocument>();
-                        
+
                         foreach (var docId in batch)
                         {
                             deleteBatch.Actions.Add(IndexDocumentsAction.Delete("id", docId));
@@ -231,7 +231,7 @@ namespace Backend.Services.BackgroundServices
             {
                 // If we can't parse the date, assume it's not old
             }
-            
+
             return false;
         }
 
@@ -242,7 +242,7 @@ namespace Backend.Services.BackgroundServices
                 var status = new SyncStatus { LastSync = DateTime.UtcNow };
                 var statusJson = System.Text.Json.JsonSerializer.Serialize(status);
                 var statusBlob = blobClient.GetBlobClient("calendar/_sync_status.json");
-                
+
                 using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(statusJson));
                 await statusBlob.UploadAsync(stream, overwrite: true);
             }
@@ -257,4 +257,4 @@ namespace Backend.Services.BackgroundServices
             public DateTime LastSync { get; set; }
         }
     }
-} 
+}
