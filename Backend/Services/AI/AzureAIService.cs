@@ -15,7 +15,7 @@ namespace Backend.Services.AI
         // Azure OpenAI connection details
         private readonly string? _azureOpenAIEndpoint;
         private readonly string? _azureOpenAIKey;
-        
+
         // Helper services for clean separation of concerns
         private readonly PromptBuilder _promptBuilder;
         private readonly ChatConfiguration _chatConfiguration;
@@ -30,7 +30,7 @@ namespace Backend.Services.AI
             // Read Azure OpenAI connection details from configuration
             _azureOpenAIEndpoint = configuration["Azure:OpenAIEndpoint"];
             _azureOpenAIKey = configuration["Azure:OpenAIKey"];
-            
+
             // Initialize helper services
             _promptBuilder = new PromptBuilder();
             _chatConfiguration = new ChatConfiguration();
@@ -70,7 +70,7 @@ namespace Backend.Services.AI
 
                 // Extract and validate response
                 var responseText = _responseParser.ExtractResponseText(aiResponse);
-                
+
                 if (!string.IsNullOrWhiteSpace(responseText))
                 {
                     return _responseParser.CreateSuccessResponse(responseText);
@@ -94,7 +94,7 @@ namespace Backend.Services.AI
         /// <param name="hasUserDocuments">Whether the user has uploaded their own documents</param>
         /// <param name="conversationHistory">Previous messages in the conversation for context</param>
         /// <returns>AI-generated response tailored to the specific source type</returns>
-        public async Task<string> AskQuestionWithContextAsync(string documentContext, string userQuestion, 
+        public async Task<string> AskQuestionWithContextAsync(string documentContext, string userQuestion,
             string sourceType, bool hasUserDocuments, List<ChatHistoryMessage>? conversationHistory = null)
         {
             // Validate configuration first
@@ -122,7 +122,7 @@ namespace Backend.Services.AI
 
                 // Extract and validate response
                 var responseText = _responseParser.ExtractResponseText(aiResponse);
-                
+
                 if (!string.IsNullOrWhiteSpace(responseText))
                 {
                     return _responseParser.CreateSuccessResponse(responseText);
