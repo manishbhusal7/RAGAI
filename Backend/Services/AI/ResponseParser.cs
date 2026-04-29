@@ -100,7 +100,7 @@ namespace Backend.Services.AI
 
             // Find the last complete word within the limit
             int lastSpaceIndex = text.LastIndexOf(' ', maxLength - 3); // Reserve space for "..."
-            
+
             if (lastSpaceIndex > 0)
             {
                 return text.Substring(0, lastSpaceIndex) + "...";
@@ -148,13 +148,13 @@ namespace Backend.Services.AI
             {
                 TimeoutException => $"The request timed out while {context}. Please try again.",
                 UnauthorizedAccessException => "Authentication failed. Please check your credentials.",
-                HttpRequestException httpEx when httpEx.Message.Contains("404") => 
+                HttpRequestException httpEx when httpEx.Message.Contains("404") =>
                     "The AI service is currently unavailable. Please try again later.",
-                HttpRequestException httpEx when httpEx.Message.Contains("429") => 
+                HttpRequestException httpEx when httpEx.Message.Contains("429") =>
                     "The AI service is busy. Please wait a moment and try again.",
-                HttpRequestException => 
+                HttpRequestException =>
                     "Network error occurred. Please check your connection and try again.",
-                ArgumentException => 
+                ArgumentException =>
                     "Invalid request format. Please rephrase your question and try again.",
                 _ => CreateFallbackErrorMessage(context)
             };
@@ -181,4 +181,4 @@ namespace Backend.Services.AI
                    "However, I can try to help with general information. Could you provide more details or rephrase your question?";
         }
     }
-} 
+}
