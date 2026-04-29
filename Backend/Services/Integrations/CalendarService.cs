@@ -39,7 +39,7 @@ namespace Backend.Services.Integrations
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
         private readonly ILogger<CalendarService> _logger;
-        
+
         // Microsoft Graph API credentials and settings
         private readonly string _tenantId;
         private readonly string _clientId;
@@ -54,12 +54,12 @@ namespace Backend.Services.Integrations
             _configuration = configuration;
             _httpClient = httpClient;
             _logger = logger;
-            
+
             // Read Microsoft Graph API credentials from configuration
             _tenantId = _configuration["MicrosoftGraph:TenantId"] ?? "";
             _clientId = _configuration["MicrosoftGraph:ClientId"] ?? "";
             _clientSecret = _configuration["MicrosoftGraph:ClientSecret"] ?? "";
-            
+
             // Get the list of calendars we want to monitor (like company calendar, holidays calendar, etc.)
             _calendarIds = _configuration.GetSection("MicrosoftGraph:CalendarIds").Get<List<string>>() ?? new List<string>();
         }
@@ -73,7 +73,7 @@ namespace Backend.Services.Integrations
         public async Task<List<CalendarEvent>> FetchAllEventsAsync(int daysAhead = DEFAULT_DAYS_TO_FETCH)
         {
             var allCalendarEvents = new List<CalendarEvent>();
-            
+
             try
             {
                 // Step 1: Get permission to access Microsoft Graph API
@@ -107,7 +107,7 @@ namespace Backend.Services.Integrations
                 }
 
                 // Log success message for debugging and monitoring
-                _logger.LogInformation("Successfully fetched {EventCount} calendar events from {CalendarCount} calendars", 
+                _logger.LogInformation("Successfully fetched {EventCount} calendar events from {CalendarCount} calendars",
                     allCalendarEvents.Count, Math.Max(_calendarIds.Count, 1));
 
                 return allCalendarEvents;
@@ -128,11 +128,11 @@ namespace Backend.Services.Integrations
         {
             var currentTime = DateTime.UtcNow;
             var futureTime = currentTime.AddDays(daysAhead);
-            
+
             // Format dates in the way Microsoft Graph API expects them
             var startDate = currentTime.ToString("yyyy-MM-ddTHH:mm:ssZ");
             var endDate = futureTime.ToString("yyyy-MM-ddTHH:mm:ssZ");
-            
+
             return (startDate, endDate);
         }
 
@@ -147,7 +147,7 @@ namespace Backend.Services.Integrations
             {
                 // Build the URL for Microsoft's token endpoint
                 var tokenEndpoint = $"https://login.microsoftonline.com/{_tenantId}/oauth2/v2.0/token";
-                
+
                 // Prepare the authentication request with our app credentials
                 var authenticationRequest = new List<KeyValuePair<string, string>>
                 {
@@ -160,7 +160,7 @@ namespace Backend.Services.Integrations
                 // Send the authentication request to Microsoft
                 var requestContent = new FormUrlEncodedContent(authenticationRequest);
                 var authenticationResponse = await _httpClient.PostAsync(tokenEndpoint, requestContent);
-                
+
                 if (authenticationResponse.IsSuccessStatusCode)
                 {
                     // Parse the response to get our access token
@@ -171,7 +171,7 @@ namespace Backend.Services.Integrations
                 else
                 {
                     var errorContent = await authenticationResponse.Content.ReadAsStringAsync();
-                    _logger.LogError("Failed to get Microsoft Graph access token. Status: {StatusCode}, Error: {ErrorDetails}", 
+                    _logger.LogError("Failed to get Microsoft Graph access token. Status: {StatusCode}, Error: {ErrorDetails}",
                         authenticationResponse.StatusCode, errorContent);
                 }
             }
@@ -179,7 +179,7 @@ namespace Backend.Services.Integrations
             {
                 _logger.LogError(exception, "Exception occurred while getting Microsoft Graph access token");
             }
-            
+
             return ""; // Return empty string to indicate failure
         }
 
@@ -195,11 +195,11 @@ namespace Backend.Services.Integrations
             string accessToken, string calendarId, string startDate, string endDate)
         {
             var eventsFromThisCalendar = new List<CalendarEvent>();
-            
+
             try
             {
                 // Add our access token to the HTTP request headers
-                _httpClient.DefaultRequestHeaders.Authorization = 
+                _httpClient.DefaultRequestHeaders.Authorization =
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
                 // Build the Microsoft Graph API URL for this calendar
@@ -207,13 +207,13 @@ namespace Backend.Services.Integrations
 
                 // Make the API call to Microsoft Graph
                 var apiResponse = await _httpClient.GetAsync(graphApiUrl);
-                
+
                 if (apiResponse.IsSuccessStatusCode)
                 {
                     // Parse the response and convert to our CalendarEvent objects
                     var responseContent = await apiResponse.Content.ReadAsStringAsync();
                     var eventsData = JsonSerializer.Deserialize<JsonElement>(responseContent);
-                    
+
                     if (eventsData.TryGetProperty("value", out var eventsArray))
                     {
                         foreach (var eventJsonData in eventsArray.EnumerateArray())
@@ -228,7 +228,7 @@ namespace Backend.Services.Integrations
                 }
                 else
                 {
-                    _logger.LogError("Failed to fetch events from calendar '{CalendarId}'. Status code: {StatusCode}", 
+                    _logger.LogError("Failed to fetch events from calendar '{CalendarId}'. Status code: {StatusCode}",
                         calendarId, apiResponse.StatusCode);
                 }
             }
@@ -246,7 +246,7 @@ namespace Backend.Services.Integrations
         private string BuildGraphApiUrl(string calendarId, string startDate, string endDate)
         {
             // Different URL structure depending on whether we're accessing the default calendar or a specific one
-            var baseGraphEndpoint = calendarId == DEFAULT_CALENDAR_IDENTIFIER 
+            var baseGraphEndpoint = calendarId == DEFAULT_CALENDAR_IDENTIFIER
                 ? "https://graph.microsoft.com/v1.0/me/calendar/events"
                 : $"https://graph.microsoft.com/v1.0/users/{calendarId}/calendar/events";
 
@@ -273,30 +273,30 @@ namespace Backend.Services.Integrations
                 // Extract basic event information
                 var eventId = eventJsonData.GetProperty("id").GetString() ?? "";
                 var eventSubject = eventJsonData.GetProperty("subject").GetString() ?? "";
-                
+
                 // Parse start and end times
                 var startElement = eventJsonData.GetProperty("start");
                 var endElement = eventJsonData.GetProperty("end");
-                
+
                 var startTime = DateTime.Parse(startElement.GetProperty("dateTime").GetString() ?? "");
                 var endTime = DateTime.Parse(endElement.GetProperty("dateTime").GetString() ?? "");
-                
+
                 // Check if this is an all-day event
-                var isAllDayEvent = eventJsonData.TryGetProperty("isAllDay", out var allDayElement) 
+                var isAllDayEvent = eventJsonData.TryGetProperty("isAllDay", out var allDayElement)
                     && allDayElement.GetBoolean();
-                
+
                 // Extract location information if available
                 var eventLocation = ExtractLocationFromJson(eventJsonData);
-                
+
                 // Extract organizer information if available
                 var eventOrganizer = ExtractOrganizerFromJson(eventJsonData);
-                
+
                 // Extract attendees list if available
                 var eventAttendees = ExtractAttendeesFromJson(eventJsonData);
-                
+
                 // Extract and clean up the event description
                 var eventDescription = ExtractAndCleanDescription(eventJsonData);
-                
+
                 // Determine what type of event this is (meeting, holiday, etc.)
                 var eventType = DetermineEventType(eventSubject, eventDescription, eventOrganizer, calendarId, eventAttendees);
 
@@ -328,7 +328,7 @@ namespace Backend.Services.Integrations
         /// </summary>
         private string ExtractLocationFromJson(JsonElement eventJsonData)
         {
-            if (eventJsonData.TryGetProperty("location", out var locationElement) && 
+            if (eventJsonData.TryGetProperty("location", out var locationElement) &&
                 locationElement.TryGetProperty("displayName", out var displayNameElement))
             {
                 return displayNameElement.GetString() ?? "";
@@ -356,7 +356,7 @@ namespace Backend.Services.Integrations
         private List<string> ExtractAttendeesFromJson(JsonElement eventJsonData)
         {
             var attendeesList = new List<string>();
-            
+
             if (eventJsonData.TryGetProperty("attendees", out var attendeesElement))
             {
                 foreach (var attendee in attendeesElement.EnumerateArray())
@@ -372,7 +372,7 @@ namespace Backend.Services.Integrations
                     }
                 }
             }
-            
+
             return attendeesList;
         }
 
@@ -382,14 +382,14 @@ namespace Backend.Services.Integrations
         private string ExtractAndCleanDescription(JsonElement eventJsonData)
         {
             var description = "";
-            
+
             if (eventJsonData.TryGetProperty("body", out var bodyElement) &&
                 bodyElement.TryGetProperty("content", out var contentElement))
             {
                 description = contentElement.GetString() ?? "";
                 description = CleanDescription(description);
             }
-            
+
             return description;
         }
 
@@ -494,10 +494,10 @@ namespace Backend.Services.Integrations
             {
                 // Step 1: Remove HTML tags (like <div>, <p>, <br>, etc.)
                 description = Regex.Replace(description, "<[^>]+>", "");
-                
+
                 // Step 2: Clean up whitespace (replace multiple spaces/newlines with single spaces)
                 description = Regex.Replace(description, @"\s+", " ").Trim();
-                
+
                 // Step 3: Limit length to keep it manageable for AI processing
                 const int MAX_DESCRIPTION_LENGTH = 1000;
                 if (description.Length > MAX_DESCRIPTION_LENGTH)
@@ -523,7 +523,7 @@ namespace Backend.Services.Integrations
         public List<string> ChunkCalendarEvent(CalendarEvent calendarEvent)
         {
             var textChunks = new List<string>();
-            
+
             try
             {
                 // Build a comprehensive, readable description of the event
@@ -549,10 +549,10 @@ namespace Backend.Services.Integrations
                 // If something goes wrong, create a simple fallback description
                 var fallbackDescription = $"Event: {calendarEvent.Subject} on {calendarEvent.StartTime:dddd, MMMM dd, yyyy}";
                 textChunks.Add(fallbackDescription);
-                
-                _logger.LogWarning(exception, "Error creating chunks for calendar event '{EventSubject}'. Using fallback description.", 
+
+                _logger.LogWarning(exception, "Error creating chunks for calendar event '{EventSubject}'. Using fallback description.",
                     calendarEvent.Subject);
-                
+
                 return textChunks;
             }
         }
@@ -566,10 +566,10 @@ namespace Backend.Services.Integrations
 
             // Start with the event title
             description.AppendLine($"Event: {calendarEvent.Subject}");
-            
+
             // Add date information in a user-friendly format
             description.AppendLine($"Date: {calendarEvent.StartTime:dddd, MMMM dd, yyyy}");
-            
+
             // Add time information
             if (calendarEvent.IsAllDay)
             {
@@ -579,19 +579,19 @@ namespace Backend.Services.Integrations
             {
                 description.AppendLine($"Time: {calendarEvent.StartTime:h:mm tt} - {calendarEvent.EndTime:h:mm tt}");
             }
-            
+
             // Add location if available
             if (!string.IsNullOrEmpty(calendarEvent.Location))
             {
                 description.AppendLine($"Location: {calendarEvent.Location}");
             }
-            
+
             // Add organizer if available
             if (!string.IsNullOrEmpty(calendarEvent.Organizer))
             {
                 description.AppendLine($"Organizer: {calendarEvent.Organizer}");
             }
-            
+
             // Add attendees if there are any
             if (calendarEvent.Attendees.Any())
             {
@@ -602,10 +602,10 @@ namespace Backend.Services.Integrations
                 }
                 description.AppendLine($"Attendees: {attendeeList}");
             }
-            
+
             // Add event type to help the AI categorize
             description.AppendLine($"Type: {calendarEvent.EventType}");
-            
+
             // Add description/details if available
             if (!string.IsNullOrEmpty(calendarEvent.Description))
             {
@@ -621,7 +621,7 @@ namespace Backend.Services.Integrations
         private List<string> SplitLongEventIntoChunks(CalendarEvent calendarEvent, string fullDescription)
         {
             var chunks = new List<string>();
-            
+
             // Create a basic event header that will go in each chunk
             var eventHeader = $"Event: {calendarEvent.Subject}\n" +
                              $"Date: {calendarEvent.StartTime:dddd, MMMM dd, yyyy}\n" +
@@ -629,13 +629,13 @@ namespace Backend.Services.Integrations
 
             // Calculate how much space we have left for the description
             var remainingSpace = TEXT_CHUNK_SIZE - eventHeader.Length;
-            
+
             if (remainingSpace > 100) // Make sure we have enough space for meaningful content
             {
                 // Split the description into smaller pieces
                 var words = calendarEvent.Description.Split(' ');
                 var currentChunk = eventHeader;
-                
+
                 foreach (var word in words)
                 {
                     if (currentChunk.Length + word.Length + 1 <= TEXT_CHUNK_SIZE)
@@ -649,7 +649,7 @@ namespace Backend.Services.Integrations
                         currentChunk = eventHeader + word + " ";
                     }
                 }
-                
+
                 // Don't forget the last chunk
                 if (currentChunk.Length > eventHeader.Length)
                 {
@@ -665,4 +665,4 @@ namespace Backend.Services.Integrations
             return chunks;
         }
     }
-} 
+}
