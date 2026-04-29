@@ -21,7 +21,7 @@ namespace Backend.Services.Search
         public List<string> ChunkContent(string content)
         {
             var chunks = new List<string>();
-            
+
             if (string.IsNullOrWhiteSpace(content))
                 return chunks;
 
@@ -44,27 +44,27 @@ namespace Backend.Services.Search
         private List<string> ChunkExcelContent(string content)
         {
             var chunks = new List<string>();
-            
+
             // Create strategic chunks that preserve analytical context
             var sections = content.Split(new[] { "=== SHEET:" }, StringSplitOptions.RemoveEmptyEntries);
-            
+
             // First chunk: Document overview (always include)
             if (sections.Length > 0)
             {
                 var overviewSection = sections[0];
                 chunks.Add(overviewSection.Trim());
             }
-            
+
             // Process each sheet with simple, reliable chunking
             for (int i = 1; i < sections.Length; i++)
             {
                 var sheetContent = "=== SHEET:" + sections[i];
                 var lines = sheetContent.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-                
+
                 var sheetMetadata = new StringBuilder();
                 var detailedDataLines = new List<string>();
                 bool inDetailedData = false;
-                
+
                 // Separate metadata from detailed data
                 foreach (var line in lines)
                 {
@@ -82,13 +82,13 @@ namespace Backend.Services.Search
                         detailedDataLines.Add(line);
                     }
                 }
-                
+
                 // Always include sheet metadata as a separate chunk for context
                 if (sheetMetadata.Length > 0)
                 {
                     chunks.Add(sheetMetadata.ToString().Trim());
                 }
-                
+
                 // Simple row-based chunking - no complex entity grouping
                 if (detailedDataLines.Any())
                 {
@@ -109,9 +109,9 @@ namespace Backend.Services.Search
         {
             var essentialMetadata = ExtractEssentialMetadata(sheetMetadata);
             var dataRows = detailedDataLines.Skip(1).ToList(); // Skip "DETAILED DATA:" header
-            
+
             if (!dataRows.Any()) return;
-            
+
             // Simple strategy: Regular row-based chunks ensuring ALL rows are processed
             for (int startIndex = 0; startIndex < dataRows.Count; startIndex += EXCEL_ROWS_PER_CHUNK)
             {
@@ -121,16 +121,16 @@ namespace Backend.Services.Search
                     var contextualChunk = new StringBuilder();
                     contextualChunk.AppendLine(essentialMetadata);
                     contextualChunk.AppendLine("DETAILED DATA:");
-                    
+
                     // Add range information for better context
                     var endIndex = Math.Min(startIndex + EXCEL_ROWS_PER_CHUNK, dataRows.Count);
                     contextualChunk.AppendLine($"Rows {startIndex + 1}-{endIndex} of {dataRows.Count}:");
-                    
+
                     foreach (var row in chunkRows)
                     {
                         contextualChunk.AppendLine(row);
                     }
-                    
+
                     chunks.Add(contextualChunk.ToString().Trim());
                 }
             }
@@ -144,10 +144,10 @@ namespace Backend.Services.Search
         private List<string> ChunkRegularContent(string content)
         {
             var chunks = new List<string>();
-            
+
             // Try to split by paragraphs first
             var paragraphs = content.Split(new[] { "\r\n\r\n", "\n\n" }, StringSplitOptions.RemoveEmptyEntries);
-            
+
             foreach (var paragraph in paragraphs)
             {
                 var trimmedParagraph = paragraph.Trim();
@@ -223,7 +223,7 @@ namespace Backend.Services.Search
                         currentChunk.Clear();
                     }
                 }
-                
+
                 currentChunk.Append(word + " ");
             }
 
@@ -244,13 +244,13 @@ namespace Backend.Services.Search
         {
             var lines = metadata.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
             var essential = new StringBuilder();
-            
+
             foreach (var line in lines)
             {
                 // Keep essential structural information for context
-                if (line.Contains("=== SHEET:") || 
-                    line.Contains("COLUMNS (") || 
-                    line.Contains("TOTAL ROWS:") || 
+                if (line.Contains("=== SHEET:") ||
+                    line.Contains("COLUMNS (") ||
+                    line.Contains("TOTAL ROWS:") ||
                     line.StartsWith("  ") && line.Contains("(") || // Column definitions
                     line.Contains("DATA SUMMARY:") ||
                     (line.StartsWith("  ") && line.Contains("unique values"))) // Summary stats
@@ -258,7 +258,7 @@ namespace Backend.Services.Search
                     essential.AppendLine(line);
                 }
             }
-            
+
             return essential.ToString();
         }
 
@@ -294,4 +294,4 @@ namespace Backend.Services.Search
             return content.Length > optimalSize;
         }
     }
-} 
+}
