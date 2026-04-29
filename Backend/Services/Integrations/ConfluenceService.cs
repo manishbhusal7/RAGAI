@@ -31,12 +31,12 @@ namespace Backend.Services.Integrations
         {
             _config = config;
             _httpClient = httpClient;
-            
+
             _baseUrl = (_config["Confluence:BaseUrl"] ?? "").Trim();
             _username = (_config["Confluence:Username"] ?? "").Trim();
             _password = (_config["Confluence:Password"] ?? "").Trim(); // Must be Atlassian API token for cloud
             var spaceKeyConfig = (_config["Confluence:SpaceKey"] ?? "").Trim();
-            
+
             // Support multiple space keys separated by commas
             _spaceKeys = spaceKeyConfig.Split(',', StringSplitOptions.RemoveEmptyEntries)
                                      .Select(s => s.Trim())
@@ -120,7 +120,7 @@ namespace Backend.Services.Integrations
         public async Task<List<ConfluenceDocument>> FetchAllDocumentsAsync()
         {
             var documents = new List<ConfluenceDocument>();
-            
+
             try
             {
                 // Guard: if any required config is missing, short-circuit
@@ -132,7 +132,7 @@ namespace Backend.Services.Integrations
 
                 // Fetch all pages from all spaces
                 var allPages = new List<ConfluenceDocument>();
-                
+
                 foreach (var spaceKey in _spaceKeys)
                 {
                     Console.WriteLine($"Fetching pages from space: {spaceKey}");
@@ -140,7 +140,7 @@ namespace Backend.Services.Integrations
                     allPages.AddRange(pagesFromSpace);
                     Console.WriteLine($"Total pages fetched from {spaceKey}: {pagesFromSpace.Count}");
                 }
-                
+
                 Console.WriteLine($"Total pages fetched from all spaces: {allPages.Count}");
 
                 foreach (var page in allPages)
@@ -181,7 +181,7 @@ namespace Backend.Services.Integrations
             while (true)
             {
                 var url = $"{_baseUrl}/rest/api/content?spaceKey={spaceKey}&type=page&limit={limit}&start={start}&expand=body.storage";
-                
+
                 try
                 {
                     Console.WriteLine($"Fetching Confluence pages: {url}");
@@ -208,7 +208,7 @@ namespace Backend.Services.Integrations
                         }
 
                         // Pagination: advance if a next link is present
-                        if (data.TryGetProperty("_links", out var links) && 
+                        if (data.TryGetProperty("_links", out var links) &&
                             links.TryGetProperty("next", out var next))
                         {
                             start += limit;
@@ -249,7 +249,7 @@ namespace Backend.Services.Integrations
                 };
 
                 // Parse links
-                if (pageElement.TryGetProperty("_links", out var links) && 
+                if (pageElement.TryGetProperty("_links", out var links) &&
                     links.TryGetProperty("tinyui", out var tinyui))
                 {
                     page.TinyLink = tinyui.GetString() ?? "";
@@ -281,7 +281,7 @@ namespace Backend.Services.Integrations
             {
                 var url = $"{_baseUrl}/rest/api/content/{pageId}/label";
                 var response = await _httpClient.GetAsync(url);
-                
+
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
@@ -294,7 +294,7 @@ namespace Backend.Services.Integrations
                         {
                             foreach (var label in labels)
                             {
-                                if (label.TryGetProperty("name", out var name) && 
+                                if (label.TryGetProperty("name", out var name) &&
                                     name.GetString() == "internal_only")
                                 {
                                     return true;
@@ -393,7 +393,7 @@ namespace Backend.Services.Integrations
         public List<string> ChunkContent(string content, int maxChunkSize = 1000, int overlap = 200)
         {
             var chunks = new List<string>();
-            
+
             if (string.IsNullOrEmpty(content))
                 return chunks;
 
@@ -406,7 +406,7 @@ namespace Backend.Services.Integrations
                 {
                     chunks.Add(currentChunk.ToString().Trim());
                     currentChunk.Clear();
-                    
+
                     // Add overlap from previous chunk
                     var lastChunk = chunks.Last();
                     if (lastChunk.Length > overlap)
@@ -415,7 +415,7 @@ namespace Backend.Services.Integrations
                         currentChunk.Append(overlapText + " ");
                     }
                 }
-                
+
                 currentChunk.Append(sentence + " ");
             }
 
@@ -428,4 +428,4 @@ namespace Backend.Services.Integrations
             return chunks;
         }
     }
-} 
+}
