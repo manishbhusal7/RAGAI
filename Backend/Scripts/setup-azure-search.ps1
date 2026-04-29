@@ -4,10 +4,10 @@
 # param(
 #     [Parameter(Mandatory=$true)]
 #     [string]$SearchServiceName,
-    
+
 #     [Parameter(Mandatory=$true)]
 #     [string]$SearchApiKey,
-    
+
 #     [Parameter(Mandatory=$true)]
 #     [string]$IndexName = "azureblob-index"
 # )
@@ -145,4 +145,4 @@
 # Write-Host "`nSetup complete!" -ForegroundColor Green
 # Write-Host "You can now configure your appsettings.json with:" -ForegroundColor Yellow
 # Write-Host "  - SearchServiceName: $SearchServiceName" -ForegroundColor Cyan
-# Write-Host "  - IndexName: $IndexName" -ForegroundColor Cyan 
+# Write-Host "  - IndexName: $IndexName" -ForegroundColor Cyan
