@@ -17,22 +17,22 @@ namespace RAG.API.Controllers
         private readonly SearchClient _searchClient;
 
         public CalendarController(
-            CalendarService calendarService, 
+            CalendarService calendarService,
             IConfiguration config,
             HttpClient httpClient)
         {
             _calendarService = calendarService;
             _config = config;
-            
+
             // Initialize Azure services
             _blobClient = new BlobContainerClient(
-                _config["Azure:BlobStorageConnectionString"], 
+                _config["Azure:BlobStorageConnectionString"],
                 _config["Azure:BlobContainer"]);
-            
+
             var searchEndpoint = new Uri(_config["AzureSearch:Endpoint"]);
             var searchApiKey = _config["AzureSearch:ApiKey"];
             var indexName = _config["AzureSearch:IndexName"];
-            
+
             _searchClient = new SearchClient(searchEndpoint, indexName, new Azure.AzureKeyCredential(searchApiKey));
         }
 
@@ -42,7 +42,7 @@ namespace RAG.API.Controllers
             try
             {
                 var events = await _calendarService.FetchAllEventsAsync(30);
-                
+
                 if (!events.Any())
                 {
                     return Ok(new { message = "No calendar events found", eventsCount = 0 });
@@ -56,16 +56,16 @@ namespace RAG.API.Controllers
                     try
                     {
                         var chunks = _calendarService.ChunkCalendarEvent(calendarEvent);
-                        
+
                         for (int i = 0; i < chunks.Count; i++)
                         {
                             var chunk = chunks[i];
                             var chunkId = $"calendar_{calendarEvent.Id}_{i}";
-                            
+
                             // Upload chunk to blob storage
                             var blobName = $"calendar/{calendarEvent.StartTime:yyyy-MM}/{chunkId}.txt";
                             var blobClientForEvent = _blobClient.GetBlobClient(blobName);
-                            
+
                             using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(chunk));
                             await blobClientForEvent.UploadAsync(stream, overwrite: true);
 
@@ -93,8 +93,8 @@ namespace RAG.API.Controllers
                 // Update last sync time
                 await UpdateLastSyncTimeAsync();
 
-                return Ok(new 
-                { 
+                return Ok(new
+                {
                     message = $"Successfully processed {processedCount} calendar events",
                     processedCount,
                     totalEvents = events.Count,
@@ -154,7 +154,7 @@ namespace RAG.API.Controllers
                     lastSync = lastSyncTime,
                     autoSyncEnabled,
                     syncIntervalHours = syncInterval,
-                    nextAutoSync = autoSyncEnabled && lastSyncTime.HasValue ? 
+                    nextAutoSync = autoSyncEnabled && lastSyncTime.HasValue ?
                         lastSyncTime.Value.AddHours(syncInterval) : (DateTime?)null
                 });
             }
@@ -170,7 +170,7 @@ namespace RAG.API.Controllers
             try
             {
                 var events = await _calendarService.FetchAllEventsAsync(days);
-                
+
                 var eventSummaries = events.Select(evt => new
                 {
                     id = evt.Id,
@@ -183,7 +183,7 @@ namespace RAG.API.Controllers
                     isAllDay = evt.IsAllDay,
                     calendarName = evt.CalendarName
                 }).OrderBy(e => e.startTime).ToList();
-                
+
                 return Ok(new
                 {
                     totalEvents = eventSummaries.Count,
@@ -204,7 +204,7 @@ namespace RAG.API.Controllers
             {
                 var allEvents = await _calendarService.FetchAllEventsAsync(1);
                 var today = DateTime.Today;
-                
+
                 var todayEvents = allEvents
                     .Where(e => e.StartTime.Date == today || e.EndTime.Date == today)
                     .Select(evt => new
@@ -218,7 +218,7 @@ namespace RAG.API.Controllers
                     })
                     .OrderBy(e => e.startTime)
                     .ToList();
-                
+
                 return Ok(new
                 {
                     date = today.ToString("yyyy-MM-dd"),
@@ -238,7 +238,7 @@ namespace RAG.API.Controllers
             try
             {
                 var allEvents = await _calendarService.FetchAllEventsAsync(days);
-                
+
                 var holidays = allEvents
                     .Where(e => e.EventType == "holiday" || e.EventType == "office-closure")
                     .Select(evt => new
@@ -251,7 +251,7 @@ namespace RAG.API.Controllers
                     })
                     .OrderBy(e => e.date)
                     .ToList();
-                
+
                 return Ok(new
                 {
                     holidaysCount = holidays.Count,
@@ -292,7 +292,7 @@ namespace RAG.API.Controllers
                 var status = new SyncStatus { LastSync = DateTime.UtcNow };
                 var statusJson = System.Text.Json.JsonSerializer.Serialize(status);
                 var statusBlob = _blobClient.GetBlobClient("calendar/_sync_status.json");
-                
+
                 using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(statusJson));
                 await statusBlob.UploadAsync(stream, overwrite: true);
             }
@@ -307,4 +307,4 @@ namespace RAG.API.Controllers
             public DateTime LastSync { get; set; }
         }
     }
-} 
+}
