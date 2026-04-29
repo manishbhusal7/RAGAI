@@ -13,14 +13,14 @@ namespace Backend.Services.BackgroundServices
         private readonly TimeSpan _syncInterval;
 
         public ConfluenceSyncBackgroundService(
-            IServiceProvider serviceProvider, 
+            IServiceProvider serviceProvider,
             ILogger<ConfluenceSyncBackgroundService> logger,
             IConfiguration config)
         {
             _serviceProvider = serviceProvider;
             _logger = logger;
             _config = config;
-            
+
             // Default to sync every 6 hours, configurable via appsettings
             var intervalHours = _config.GetValue("Confluence:SyncIntervalHours", 6);
             _syncInterval = TimeSpan.FromHours(intervalHours);
@@ -29,7 +29,7 @@ namespace Backend.Services.BackgroundServices
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             var autoSyncEnabled = _config.GetValue("Confluence:EnableAutoSync", true);
-            
+
             if (!autoSyncEnabled)
             {
                 _logger.LogInformation("Confluence auto-sync is disabled in configuration");
@@ -63,11 +63,11 @@ namespace Backend.Services.BackgroundServices
         {
             using var scope = _serviceProvider.CreateScope();
             var confluenceService = scope.ServiceProvider.GetRequiredService<ConfluenceService>();
-            
+
             var blobClient = new BlobContainerClient(
-                _config["Azure:BlobStorageConnectionString"], 
+                _config["Azure:BlobStorageConnectionString"],
                 _config["Azure:BlobContainer"]);
-            
+
             var searchEndpoint = new Uri(_config["AzureSearch:Endpoint"]);
             var searchApiKey = _config["AzureSearch:ApiKey"];
             var indexName = _config["AzureSearch:IndexName"];
@@ -85,7 +85,7 @@ namespace Backend.Services.BackgroundServices
 
                 // Fetch all documents from Confluence
                 var documents = await confluenceService.FetchAllDocumentsAsync();
-                
+
                 if (!documents.Any())
                 {
                     _logger.LogWarning("No documents found in Confluence or all documents are internal");
@@ -101,16 +101,16 @@ namespace Backend.Services.BackgroundServices
                     {
                         // Chunk the content for better search
                         var chunks = confluenceService.ChunkContent(document.Content);
-                        
+
                         for (int i = 0; i < chunks.Count; i++)
                         {
                             var chunk = chunks[i];
                             var chunkId = $"confluence_{document.Id}_{i}";
-                            
+
                             // Upload chunk to blob storage
                             var blobName = $"confluence/{document.Id}/{chunkId}.txt";
                             var blobClientForDoc = blobClient.GetBlobClient(blobName);
-                            
+
                             using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(chunk));
                             await blobClientForDoc.UploadAsync(stream, overwrite: true);
 
@@ -140,9 +140,9 @@ namespace Backend.Services.BackgroundServices
                 // Update last sync time
                 await UpdateLastSyncTimeAsync(blobClient);
 
-                _logger.LogInformation("Confluence sync completed: {ProcessedCount}/{TotalCount} documents processed", 
+                _logger.LogInformation("Confluence sync completed: {ProcessedCount}/{TotalCount} documents processed",
                     processedCount, documents.Count);
-                
+
                 if (errors.Any())
                 {
                     _logger.LogWarning("Confluence sync had {ErrorCount} errors", errors.Count);
@@ -162,7 +162,7 @@ namespace Backend.Services.BackgroundServices
                 var status = new SyncStatus { LastSync = DateTime.UtcNow };
                 var statusJson = System.Text.Json.JsonSerializer.Serialize(status);
                 var statusBlob = blobClient.GetBlobClient("confluence/_sync_status.json");
-                
+
                 using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(statusJson));
                 await statusBlob.UploadAsync(stream, overwrite: true);
             }
@@ -177,4 +177,4 @@ namespace Backend.Services.BackgroundServices
             public DateTime LastSync { get; set; }
         }
     }
-} 
+}
