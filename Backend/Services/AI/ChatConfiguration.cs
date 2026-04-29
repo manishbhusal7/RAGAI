@@ -105,4 +105,4 @@ namespace Backend.Services.AI
             };
         }
     }
-} 
+}
