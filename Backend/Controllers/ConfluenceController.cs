@@ -17,22 +17,22 @@ namespace RAG.API.Controllers
         private readonly SearchClient _searchClient;
 
         public ConfluenceController(
-            ConfluenceService confluenceService, 
+            ConfluenceService confluenceService,
             IConfiguration config,
             HttpClient httpClient)
         {
             _confluenceService = confluenceService;
             _config = config;
-            
+
             // Initialize Azure services
             _blobClient = new BlobContainerClient(
-                _config["Azure:BlobStorageConnectionString"], 
+                _config["Azure:BlobStorageConnectionString"],
                 _config["Azure:BlobContainer"]);
-            
+
             var searchEndpoint = new Uri(_config["AzureSearch:Endpoint"]);
             var searchApiKey = _config["AzureSearch:ApiKey"];
             var indexName = _config["AzureSearch:IndexName"];
-            
+
             _searchClient = new SearchClient(searchEndpoint, indexName, new Azure.AzureKeyCredential(searchApiKey));
         }
 
@@ -60,7 +60,7 @@ namespace RAG.API.Controllers
             {
                 // Fetch all documents from Confluence
                 var documents = await _confluenceService.FetchAllDocumentsAsync();
-                
+
                 if (!documents.Any())
                 {
                     return BadRequest("No documents found in Confluence or all documents are internal.");
@@ -75,16 +75,16 @@ namespace RAG.API.Controllers
                     {
                         // Chunk the content for better search
                         var chunks = _confluenceService.ChunkContent(document.Content);
-                        
+
                         for (int i = 0; i < chunks.Count; i++)
                         {
                             var chunk = chunks[i];
                             var chunkId = $"confluence_{document.Id}_{i}";
-                            
+
                             // Upload chunk to blob storage
                             var blobName = $"confluence/{document.Id}/{chunkId}.txt";
                             var blobClient = _blobClient.GetBlobClient(blobName);
-                            
+
                             using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(chunk));
                             await blobClient.UploadAsync(stream, overwrite: true);
 
@@ -112,8 +112,8 @@ namespace RAG.API.Controllers
                 // Update last sync time
                 await UpdateLastSyncTimeAsync();
 
-                return Ok(new 
-                { 
+                return Ok(new
+                {
                     message = $"Successfully processed {processedCount} documents",
                     processedCount,
                     totalDocuments = documents.Count,
@@ -173,7 +173,7 @@ namespace RAG.API.Controllers
                     lastSync = lastSyncTime,
                     autoSyncEnabled,
                     syncIntervalHours = syncInterval,
-                    nextAutoSync = autoSyncEnabled && lastSyncTime.HasValue ? 
+                    nextAutoSync = autoSyncEnabled && lastSyncTime.HasValue ?
                         lastSyncTime.Value.AddHours(syncInterval) : (DateTime?)null
                 });
             }
@@ -191,21 +191,21 @@ namespace RAG.API.Controllers
                 var baseUrl = _config["Confluence:BaseUrl"];
                 var username = _config["Confluence:Username"];
                 var password = _config["Confluence:Password"];
-                
+
                 var credentials = Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes($"{username}:{password}"));
-                
+
                 using var httpClient = new HttpClient();
-                httpClient.DefaultRequestHeaders.Authorization = 
+                httpClient.DefaultRequestHeaders.Authorization =
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentials);
-                
+
                 var url = $"{baseUrl}/rest/api/space";
                 var response = await httpClient.GetAsync(url);
-                
+
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
                     var data = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(json);
-                    
+
                     var spaces = new List<object>();
                     if (data.TryGetProperty("results", out var results))
                     {
@@ -223,8 +223,8 @@ namespace RAG.API.Controllers
                             }
                         }
                     }
-                    
-                    return Ok(new { 
+
+                    return Ok(new {
                         currentSpace = _config["Confluence:SpaceKey"],
                         availableSpaces = spaces,
                         totalSpaces = spaces.Count
@@ -247,7 +247,7 @@ namespace RAG.API.Controllers
             try
             {
                 var documents = await _confluenceService.FetchAllDocumentsAsync();
-                
+
                 var documentTitles = documents.Select(doc => new
                 {
                     id = doc.Id,
@@ -256,7 +256,7 @@ namespace RAG.API.Controllers
                     createdDate = doc.CreatedDate.ToString("yyyy-MM-dd"),
                     lastModified = doc.LastModified.ToString("yyyy-MM-dd")
                 }).ToList();
-                
+
                 return Ok(new
                 {
                     spaceKey = _config["Confluence:SpaceKey"],
@@ -297,7 +297,7 @@ namespace RAG.API.Controllers
                 var status = new SyncStatus { LastSync = DateTime.UtcNow };
                 var statusJson = System.Text.Json.JsonSerializer.Serialize(status);
                 var statusBlob = _blobClient.GetBlobClient("confluence/_sync_status.json");
-                
+
                 using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(statusJson));
                 await statusBlob.UploadAsync(stream, overwrite: true);
             }
@@ -312,4 +312,4 @@ namespace RAG.API.Controllers
             public DateTime LastSync { get; set; }
         }
     }
-} 
+}
