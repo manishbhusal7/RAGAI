@@ -13,21 +13,21 @@ function App() {
 
   return (
     <div className="app-container">
-      <Header 
+      <Header
         onToggleSidebar={handleToggleSidebar}
         isSidebarCollapsed={isSidebarCollapsed}
       />
-      
+
       <main className="app-main">
-        <Chat 
+        <Chat
           isSidebarCollapsed={isSidebarCollapsed}
           onToggleSidebar={handleToggleSidebar}
         />
       </main>
-      
+
       <Footer />
     </div>
   );
 }
 
-export default App; 
+export default App;
