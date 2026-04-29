@@ -35,10 +35,10 @@ namespace Backend.Services.AI
         /// <param name="conversationHistory">Previous conversation messages</param>
         /// <returns>List of chat messages with full context</returns>
         public List<ChatMessage> CreateConversationWithHistory(
-            string documentContext, 
-            string userQuestion, 
-            string sourceType, 
-            bool hasUserDocuments, 
+            string documentContext,
+            string userQuestion,
+            string sourceType,
+            bool hasUserDocuments,
             List<ChatHistoryMessage>? conversationHistory = null)
         {
             var messages = new List<ChatMessage>
@@ -67,7 +67,7 @@ namespace Backend.Services.AI
             {
                 messages.Add(new UserChatMessage($"Context from {sourceType} source:\n{documentContext}"));
             }
-            
+
             messages.Add(new UserChatMessage(userQuestion));
             return messages;
         }
@@ -103,7 +103,7 @@ RESPONSE FORMATTING:
 FORMAT GUIDELINES:
 - Use ## for main sections and ### for subsections
 - For numbered lists: Use '1. item', '2. item' (each on new line)
-- For bullet points: Use '• item' (each on new line) 
+- For bullet points: Use '• item' (each on new line)
 - For sub-bullets: Use '  • sub-item' (two spaces + bullet)
 - Use **bold** for important terms
 - Separate major sections with blank lines
@@ -315,4 +315,4 @@ FORMAT YOUR RESPONSES:
 ALWAYS prioritize being helpful and comprehensive while clearly attributing information sources.";
         }
     }
-} 
+}
