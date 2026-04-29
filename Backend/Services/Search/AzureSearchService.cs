@@ -30,13 +30,13 @@ namespace Backend.Services.Search
         public AzureSearchService(IConfiguration configuration)
         {
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-            
+
             // Read Azure Search connection details from configuration
-            var endpoint = configuration["AzureSearch:Endpoint"] ?? 
+            var endpoint = configuration["AzureSearch:Endpoint"] ??
                 throw new ArgumentNullException("AzureSearch:Endpoint", "Azure Search endpoint is not configured");
-            var indexName = configuration["AzureSearch:IndexName"] ?? 
+            var indexName = configuration["AzureSearch:IndexName"] ??
                 throw new ArgumentNullException("AzureSearch:IndexName", "Azure Search index name is not configured");
-            var apiKey = configuration["AzureSearch:ApiKey"] ?? 
+            var apiKey = configuration["AzureSearch:ApiKey"] ??
                 throw new ArgumentNullException("AzureSearch:ApiKey", "Azure Search API key is not configured");
 
             // Create clients for searching and managing the search index
@@ -77,7 +77,7 @@ namespace Backend.Services.Search
                 var searchResults = searchResponse.Value.GetResults();
 
                 var relevantTextChunks = new List<string>();
-                
+
                 // Extract text content from each search result
                 foreach (var searchResult in searchResults)
                 {
@@ -113,9 +113,9 @@ namespace Backend.Services.Search
                 if (!queryValidation.isValid)
                 {
                     Console.WriteLine($"Invalid query: {queryValidation.errorMessage}");
-                    return new SearchResultWithSource 
-                    { 
-                        Chunks = new List<string>(), 
+                    return new SearchResultWithSource
+                    {
+                        Chunks = new List<string>(),
                         Source = "none",
                         HasUserDocuments = false
                     };
@@ -123,42 +123,42 @@ namespace Backend.Services.Search
 
                 // Check if the user has uploaded their own documents
                 bool userHasUploadedDocuments = await HasUserUploadedDocumentsAsync();
-                
+
                 // Get the optimal search strategy
                 var searchStrategy = _searchQueryBuilder.GetSearchStrategy(userQuery, userHasUploadedDocuments);
-                
+
                 // Try primary source first
                 var primaryResults = await SearchInSpecificSourceAsync(userQuery, searchStrategy.PrimarySource);
-                
+
                 if (primaryResults.Any())
                 {
-                    return new SearchResultWithSource 
-                    { 
-                        Chunks = primaryResults, 
+                    return new SearchResultWithSource
+                    {
+                        Chunks = primaryResults,
                         Source = searchStrategy.PrimarySource,
                         HasUserDocuments = userHasUploadedDocuments
                     };
                 }
-                
+
                 // Try fallback sources if primary didn't yield results
                 foreach (var fallbackSource in searchStrategy.FallbackSources)
                 {
                     var fallbackResults = await SearchInSpecificSourceAsync(userQuery, fallbackSource);
                     if (fallbackResults.Any())
                     {
-                        return new SearchResultWithSource 
-                        { 
-                            Chunks = fallbackResults, 
+                        return new SearchResultWithSource
+                        {
+                            Chunks = fallbackResults,
                             Source = fallbackSource,
                             HasUserDocuments = userHasUploadedDocuments
                         };
                     }
                 }
-                
+
                 // If no results found in any source
-                return new SearchResultWithSource 
-                { 
-                    Chunks = new List<string>(), 
+                return new SearchResultWithSource
+                {
+                    Chunks = new List<string>(),
                     Source = searchStrategy.PrimarySource,
                     HasUserDocuments = userHasUploadedDocuments
                 };
@@ -166,9 +166,9 @@ namespace Backend.Services.Search
             catch (Exception exception)
             {
                 Console.WriteLine($"Azure Search with source error: {exception.Message}");
-                return new SearchResultWithSource 
-                { 
-                    Chunks = new List<string>(), 
+                return new SearchResultWithSource
+                {
+                    Chunks = new List<string>(),
                     Source = "none",
                     HasUserDocuments = false
                 };
@@ -187,7 +187,7 @@ namespace Backend.Services.Search
             {
                 // Optimize the query for the specific source type
                 var optimizedQuery = _searchQueryBuilder.OptimizeQuery(userQuery, sourceType);
-                
+
                 // Configure search with optimization for aggregate queries
                 var searchOptions = _searchQueryBuilder.CreateFilteredSearchOptions(sourceType, userQuery);
 
@@ -226,7 +226,7 @@ namespace Backend.Services.Search
             {
                 // Optimize the query for the specific source type
                 var optimizedQuery = _searchQueryBuilder.OptimizeQuery(userQuery, sourceType);
-                
+
                 // Configure search with date-aware filtering for better accuracy
                 var searchOptions = _searchQueryBuilder.CreateDateAwareFilteredSearchOptions(sourceType, userQuery);
 
@@ -259,11 +259,11 @@ namespace Backend.Services.Search
                 // First check blob storage for actual files (authoritative source)
                 var blobClient = new BlobContainerClient(_configuration["Azure:BlobStorageConnectionString"], _configuration["Azure:BlobContainer"]);
                 var hasActualFiles = false;
-                
+
                 await foreach (var blobItem in blobClient.GetBlobsAsync())
                 {
                     // Only count user-uploaded files, not system files
-                    if (!blobItem.Name.StartsWith("confluence/") && 
+                    if (!blobItem.Name.StartsWith("confluence/") &&
                         !blobItem.Name.StartsWith("_sync_status") &&
                         !blobItem.Name.Contains("_metadata"))
                     {
@@ -289,7 +289,7 @@ namespace Backend.Services.Search
 
                 var response = await _searchClient.SearchAsync<SearchDocument>("*", options).ConfigureAwait(false);
                 var indexedCount = response.Value.TotalCount ?? 0;
-                
+
                 Console.WriteLine($"Found {(hasActualFiles ? "files in blob storage" : "no files in blob storage")} and {indexedCount} indexed chunks");
                 return hasActualFiles && indexedCount > 0;
             }
@@ -335,7 +335,7 @@ namespace Backend.Services.Search
             {
                 // Extract text content from the document using the document processor
                 string documentContent = await _documentProcessor.ExtractTextFromDocument(fileName, blobUrl);
-                
+
                 if (string.IsNullOrWhiteSpace(documentContent))
                 {
                     // Fallback to metadata if text extraction fails
@@ -344,13 +344,13 @@ namespace Backend.Services.Search
 
                 // Chunk the content for better search using the content chunker
                 var chunks = _contentChunker.ChunkContent(documentContent);
-                
+
                 // Index each chunk separately
                 for (int i = 0; i < chunks.Count; i++)
                 {
                     var chunk = chunks[i];
                     var chunkId = Guid.NewGuid().ToString();
-                    
+
                     var document = new SearchDocument
                     {
                         ["id"] = chunkId,
@@ -453,7 +453,7 @@ namespace Backend.Services.Search
                 // Get list of actual files in blob storage
                 var blobClient = new BlobContainerClient(_configuration["Azure:BlobStorageConnectionString"], _configuration["Azure:BlobContainer"]);
                 var actualFiles = new HashSet<string>();
-                
+
                 await foreach (var blobItem in blobClient.GetBlobsAsync())
                 {
                     if (!blobItem.Name.StartsWith("confluence/") && !blobItem.Name.StartsWith("_sync_status"))
@@ -464,7 +464,7 @@ namespace Backend.Services.Search
 
                 // Find orphaned documents (in search index but not in blob storage)
                 var deleteActions = new List<IndexDocumentsAction<SearchDocument>>();
-                
+
                 foreach (var doc in indexDocuments)
                 {
                     if (doc.Document.TryGetValue("filename", out var filename) && filename != null)
@@ -503,37 +503,37 @@ namespace Backend.Services.Search
             try
             {
                 Console.WriteLine("Starting cleanup of orphaned uploaded documents...");
-                
+
                 // Get all uploaded documents from search index
                 var searchOptions = _searchQueryBuilder.CreateFilteredSearchOptions("uploaded", 1000);
                 var response = await _searchClient.SearchAsync<SearchDocument>("*", searchOptions);
                 var results = response.Value.GetResults();
-                
+
                 if (!results.Any())
                 {
                     Console.WriteLine("No uploaded documents found in search index");
                     return;
                 }
-                
+
                 // Get list of actual files in blob storage
                 var blobClient = new BlobContainerClient(_configuration["Azure:BlobStorageConnectionString"], _configuration["Azure:BlobContainer"]);
                 var existingFiles = new HashSet<string>();
-                
+
                 await foreach (var blobItem in blobClient.GetBlobsAsync())
                 {
-                    if (!blobItem.Name.StartsWith("confluence/") && 
+                    if (!blobItem.Name.StartsWith("confluence/") &&
                         !blobItem.Name.StartsWith("_sync_status") &&
                         !blobItem.Name.Contains("_metadata"))
                     {
                         existingFiles.Add(blobItem.Name);
                     }
                 }
-                
+
                 Console.WriteLine($"Found {existingFiles.Count} files in blob storage and {results.Count()} uploaded document chunks in search index");
-                
+
                 // Find orphaned documents (in search index but not in blob storage)
                 var orphanedActions = new List<IndexDocumentsAction<SearchDocument>>();
-                
+
                 foreach (var result in results)
                 {
                     if (result.Document.TryGetValue("filename", out var filenameObj) && filenameObj != null)
@@ -549,7 +549,7 @@ namespace Backend.Services.Search
                         }
                     }
                 }
-                
+
                 if (orphanedActions.Any())
                 {
                     Console.WriteLine($"Found {orphanedActions.Count} orphaned document chunks to delete");
@@ -577,7 +577,7 @@ namespace Backend.Services.Search
         {
             // Try to get content from various possible field names in the search index
             // Different document types might store content in different fields
-            
+
             if (searchResult.Document.TryGetValue("content", out var content) && content != null)
             {
                 return content.ToString();
@@ -599,7 +599,7 @@ namespace Backend.Services.Search
     }
 
     // Keep the existing result classes for backward compatibility
-    
+
     /// <summary>
     /// Represents a search result from Azure Search with all the important information
     /// </summary>
