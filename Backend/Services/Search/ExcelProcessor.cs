@@ -20,28 +20,28 @@
 //             var sb = new StringBuilder();
 //             var workbookPart = doc.WorkbookPart;
 //             var sharedStringTable = workbookPart.SharedStringTablePart?.SharedStringTable;
-            
+
 //             // Get worksheet names for better context
 //             var sheets = workbookPart.Workbook.Descendants<Sheet>().ToList();
-            
+
 //             sb.AppendLine("=== EXCEL DOCUMENT ANALYSIS ===");
 //             sb.AppendLine($"Total Sheets: {sheets.Count}");
 //             sb.AppendLine();
-            
+
 //             int sheetIndex = 0;
 //             foreach (var worksheetPart in workbookPart.WorksheetParts)
 //             {
 //                 var worksheet = worksheetPart.Worksheet;
 //                 var sheetData = worksheet.GetFirstChild<SheetData>();
-                
+
 //                 if (sheetData == null) continue;
-                
+
 //                 // Add sheet name for context
 //                 var sheetName = sheetIndex < sheets.Count ? sheets[sheetIndex].Name?.Value : $"Sheet{sheetIndex + 1}";
-                
+
 //                 // Detect if this is a summary/aggregate sheet
 //                 var isSummarySheet = IsSummarySheet(sheetName, sheetData, sharedStringTable);
-                
+
 //                 if (isSummarySheet)
 //                 {
 //                     // Completely skip summary sheets to prevent AI confusion
@@ -51,21 +51,21 @@
 //                     sheetIndex++;
 //                     continue;
 //                 }
-                
+
 //                 var sheetType = "INDIVIDUAL DATA SHEET";
 //                 sb.AppendLine($"=== SHEET: {sheetName} ({sheetType}) ===");
-                
+
 //                 var rows = sheetData.Descendants<Row>().ToList();
 //                 if (!rows.Any()) continue;
-                
+
 //                 // Extract headers (first row) and data rows separately for better structure
 //                 var headerRow = rows.FirstOrDefault();
 //                 var dataRows = rows.Skip(1).ToList();
-                
+
 //                 // Extract column headers with data types analysis
 //                 var headers = new List<string>();
 //                 var columnDataTypes = new List<string>();
-                
+
 //                 if (headerRow != null)
 //                 {
 //                     foreach (var cell in headerRow.Elements<Cell>())
@@ -73,7 +73,7 @@
 //                         var cellValue = GetCellValue(cell, sharedStringTable);
 //                         headers.Add(cellValue ?? "");
 //                     }
-                    
+
 //                     // Analyze data types in each column by sampling first few rows
 //                     for (int colIndex = 0; colIndex < headers.Count; colIndex++)
 //                     {
@@ -82,11 +82,11 @@
 //                             var cells = row.Elements<Cell>().ToList();
 //                             return colIndex < cells.Count ? GetCellValue(cells[colIndex], sharedStringTable) : "";
 //                         }).Where(v => !string.IsNullOrWhiteSpace(v)).ToList();
-                        
+
 //                         var dataType = InferDataType(sampleValues);
 //                         columnDataTypes.Add(dataType);
 //                     }
-                    
+
 //                     // Add comprehensive headers with data type info
 //                     sb.AppendLine($"COLUMNS ({headers.Count} total):");
 //                     for (int i = 0; i < headers.Count; i++)
@@ -99,13 +99,13 @@
 //                     }
 //                     sb.AppendLine($"TOTAL ROWS: {dataRows.Count}");
 //                     sb.AppendLine();
-                    
+
 //                     // Add summary statistics
 //                     sb.AppendLine("DATA SUMMARY:");
 //                     CreateDataSummary(sb, headers, dataRows, sharedStringTable);
 //                     sb.AppendLine();
 //                 }
-                
+
 //                 // Process data rows with enhanced context and relationships
 //                 sb.AppendLine("DETAILED DATA:");
 //                 int rowNumber = 1;
@@ -113,7 +113,7 @@
 //                 {
 //                     var cells = row.Elements<Cell>().ToList();
 //                     var rowData = new List<string>();
-                    
+
 //                     // Map cells to their column positions
 //                     for (int i = 0; i < Math.Max(cells.Count, headers.Count); i++)
 //                     {
@@ -124,7 +124,7 @@
 //                         }
 //                         rowData.Add(cellValue);
 //                     }
-                    
+
 //                     // Create comprehensive row representation with row numbers
 //                     var meaningfulData = new List<string>();
 //                     for (int i = 0; i < rowData.Count; i++)
@@ -142,18 +142,18 @@
 //                             }
 //                         }
 //                     }
-                    
+
 //                     if (meaningfulData.Any())
 //                     {
 //                         sb.AppendLine($"Row {rowNumber}: {string.Join(" | ", meaningfulData)}");
 //                         rowNumber++;
 //                     }
 //                 }
-                
+
 //                 sb.AppendLine(); // Add spacing between sheets
 //                 sheetIndex++;
 //             }
-            
+
 //             return sb.ToString();
 //         }
 
@@ -165,20 +165,20 @@
 //         private string InferDataType(List<string> sampleValues)
 //         {
 //             if (!sampleValues.Any()) return "Empty";
-            
+
 //             var numericCount = sampleValues.Count(v => double.TryParse(v, out _));
 //             var dateCount = sampleValues.Count(v => DateTime.TryParse(v, out _));
-            
+
 //             if (numericCount > sampleValues.Count * 0.8) return "Numeric";
 //             if (dateCount > sampleValues.Count * 0.8) return "Date";
-            
+
 //             // Check for specific patterns
 //             var hasUrls = sampleValues.Any(v => v.StartsWith("http"));
 //             var hasEmails = sampleValues.Any(v => v.Contains("@"));
-            
+
 //             if (hasUrls) return "URL/Link";
 //             if (hasEmails) return "Email";
-            
+
 //             return "Text";
 //         }
 
@@ -195,20 +195,20 @@
 //             for (int colIndex = 0; colIndex < headers.Count; colIndex++)
 //             {
 //                 if (string.IsNullOrWhiteSpace(headers[colIndex])) continue;
-                
+
 //                 var columnValues = dataRows.Select(row =>
 //                 {
 //                     var cells = row.Elements<Cell>().ToList();
 //                     return colIndex < cells.Count ? GetCellValue(cells[colIndex], sharedStringTable) : "";
 //                 }).Where(v => !string.IsNullOrWhiteSpace(v)).ToList();
-                
+
 //                 if (columnValues.Any())
 //                 {
 //                     var uniqueCount = columnValues.Distinct().Count();
 //                     var totalCount = columnValues.Count;
-                    
+
 //                     sb.AppendLine($"  {headers[colIndex]}: {uniqueCount} unique values out of {totalCount} total");
-                    
+
 //                     // Show sample unique values for categorical data
 //                     if (uniqueCount <= 20 && uniqueCount < totalCount * 0.8)
 //                     {
@@ -228,9 +228,9 @@
 //         private string GetCellValue(Cell cell, SharedStringTable? sharedStringTable)
 //         {
 //             if (cell.CellValue == null) return "";
-            
+
 //             var value = cell.CellValue.InnerText;
-            
+
 //             // Handle different cell types
 //             if (cell.DataType != null)
 //             {
@@ -262,7 +262,7 @@
 //                     return value;
 //                 }
 //             }
-            
+
 //             return value;
 //         }
 
@@ -337,7 +337,7 @@
 //             return false;
 //         }
 //     }
-// } 
+// }
 
 
 
@@ -367,14 +367,14 @@ namespace Backend.Services.Search
             var sb = new StringBuilder();
             var workbookPart = doc.WorkbookPart;
             var sharedStringTable = workbookPart.SharedStringTablePart?.SharedStringTable;
-            
+
             // Get worksheet names for better context
             var sheets = workbookPart.Workbook.Descendants<Sheet>().ToList();
-            
+
             sb.AppendLine("=== EXCEL DOCUMENT ANALYSIS ===");
             sb.AppendLine($"Total Sheets: {sheets.Count}");
             sb.AppendLine();
-            
+
             int sheetIndex = 0;
             foreach (var sheet in sheets)
             {
@@ -384,18 +384,18 @@ namespace Backend.Services.Search
                     var worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id);
                     var worksheet = worksheetPart.Worksheet;
                     var sheetData = worksheet.GetFirstChild<SheetData>();
-                    
-                    if (sheetData == null) 
+
+                    if (sheetData == null)
                     {
                         sheetIndex++;
                         continue;
                     }
-                    
+
                     var sheetName = sheet.Name?.Value ?? $"Sheet{sheetIndex + 1}";
-                    
+
                     // Check if this is a summary/aggregate sheet
                     var isSummarySheet = IsSummarySheet(sheetName, sheetData, sharedStringTable);
-                    
+
                     if (isSummarySheet)
                     {
                         sb.AppendLine($"=== SHEET: {sheetName} (SKIPPED - SUMMARY/AGGREGATE SHEET) ===");
@@ -404,32 +404,32 @@ namespace Backend.Services.Search
                         sheetIndex++;
                         continue;
                     }
-                    
+
                     var sheetType = "INDIVIDUAL DATA SHEET";
                     sb.AppendLine($"=== SHEET: {sheetName} ({sheetType}) ===");
-                    
+
                     var rows = sheetData.Descendants<Row>().OrderBy(r => r.RowIndex?.Value ?? 0).ToList();
-                    if (!rows.Any()) 
+                    if (!rows.Any())
                     {
                         sb.AppendLine("No data found in this sheet.");
                         sb.AppendLine();
                         sheetIndex++;
                         continue;
                     }
-                    
+
                     // Process the sheet data
                     ProcessSheetData(sb, rows, sharedStringTable, sheetName);
-                    
+
                     sb.AppendLine(); // Add spacing between sheets
                 }
                 catch (Exception ex)
                 {
                     sb.AppendLine($"Error processing sheet {sheet.Name?.Value}: {ex.Message}");
                 }
-                
+
                 sheetIndex++;
             }
-            
+
             return sb.ToString();
         }
 
@@ -449,17 +449,17 @@ namespace Backend.Services.Search
 
             var headerRow = rows[headerRowIndex];
             var dataRows = rows.Skip(headerRowIndex + 1).ToList();
-            
+
             // Extract and clean headers
             var headers = ExtractHeaders(headerRow, sharedStringTable);
             var maxColumns = Math.Max(headers.Count, dataRows.SelectMany(r => r.Elements<Cell>()).Count());
-            
+
             // Ensure we have enough header slots
             while (headers.Count < maxColumns)
             {
                 headers.Add($"Column_{headers.Count + 1}");
             }
-            
+
             sb.AppendLine($"COLUMNS ({headers.Count} total):");
             for (int i = 0; i < headers.Count; i++)
             {
@@ -470,10 +470,10 @@ namespace Backend.Services.Search
             }
             sb.AppendLine($"TOTAL ROWS: {dataRows.Count}");
             sb.AppendLine();
-            
+
             // Create data summary for better context
             CreateEnhancedDataSummary(sb, headers, dataRows, sharedStringTable);
-            
+
             // Process data rows with proper cell mapping
             sb.AppendLine("DETAILED DATA:");
             ProcessDataRows(sb, dataRows, headers, sharedStringTable);
@@ -488,18 +488,18 @@ namespace Backend.Services.Search
             {
                 var row = rows[i];
                 var cellValues = GetRowValues(row, sharedStringTable);
-                
+
                 // Headers typically have:
                 // 1. Text values (not mostly numeric)
                 // 2. No empty cells at the beginning
                 // 3. Descriptive names
-                
+
                 var nonEmptyValues = cellValues.Where(v => !string.IsNullOrWhiteSpace(v)).ToList();
                 if (nonEmptyValues.Count > 0)
                 {
                     var numericCount = nonEmptyValues.Count(v => IsNumeric(v));
                     var textRatio = (double)(nonEmptyValues.Count - numericCount) / nonEmptyValues.Count;
-                    
+
                     // If mostly text and has reasonable number of columns, likely a header
                     if (textRatio > 0.5 && nonEmptyValues.Count >= 2)
                     {
@@ -507,7 +507,7 @@ namespace Backend.Services.Search
                     }
                 }
             }
-            
+
             return 0; // Default to first row
         }
 
@@ -518,7 +518,7 @@ namespace Backend.Services.Search
         {
             var headers = new List<string>();
             var cells = headerRow.Elements<Cell>().OrderBy(c => GetColumnIndex(c.CellReference?.Value)).ToList();
-            
+
             // Fill gaps in cell references
             var allColumnIndices = new List<int>();
             foreach (var cell in cells)
@@ -526,7 +526,7 @@ namespace Backend.Services.Search
                 var colIndex = GetColumnIndex(cell.CellReference?.Value);
                 allColumnIndices.Add(colIndex);
             }
-            
+
             if (allColumnIndices.Any())
             {
                 var maxCol = allColumnIndices.Max();
@@ -544,7 +544,7 @@ namespace Backend.Services.Search
                     }
                 }
             }
-            
+
             return headers;
         }
 
@@ -557,7 +557,7 @@ namespace Backend.Services.Search
             foreach (var row in dataRows)
             {
                 var rowData = GetRowDataMapped(row, headers.Count, sharedStringTable);
-                
+
                 // Create comprehensive row representation
                 var meaningfulData = new List<string>();
                 for (int i = 0; i < Math.Min(rowData.Count, headers.Count); i++)
@@ -575,13 +575,13 @@ namespace Backend.Services.Search
                         }
                     }
                 }
-                
+
                 if (meaningfulData.Any())
                 {
                     sb.AppendLine($"Row {rowNumber}: {string.Join(" | ", meaningfulData)}");
                     rowNumber++;
                 }
-                
+
                 // Limit output for very large datasets
                 if (rowNumber > 1000) // Configurable limit
                 {
@@ -597,7 +597,7 @@ namespace Backend.Services.Search
         private List<string> GetRowDataMapped(Row row, int expectedColumns, SharedStringTable? sharedStringTable)
         {
             var rowData = new List<string>(new string[expectedColumns]);
-            
+
             foreach (var cell in row.Elements<Cell>())
             {
                 var colIndex = GetColumnIndex(cell.CellReference?.Value);
@@ -606,7 +606,7 @@ namespace Backend.Services.Search
                     rowData[colIndex] = GetCellValue(cell, sharedStringTable) ?? "";
                 }
             }
-            
+
             return rowData;
         }
 
@@ -617,12 +617,12 @@ namespace Backend.Services.Search
         {
             var values = new List<string>();
             var cells = row.Elements<Cell>().OrderBy(c => GetColumnIndex(c.CellReference?.Value)).ToList();
-            
+
             foreach (var cell in cells)
             {
                 values.Add(GetCellValue(cell, sharedStringTable) ?? "");
             }
-            
+
             return values;
         }
 
@@ -632,7 +632,7 @@ namespace Backend.Services.Search
         private int GetColumnIndex(string cellReference)
         {
             if (string.IsNullOrEmpty(cellReference)) return 0;
-            
+
             // Extract column letters from cell reference (e.g., "A1" -> "A")
             var columnLetters = "";
             foreach (char c in cellReference)
@@ -646,16 +646,16 @@ namespace Backend.Services.Search
                     break;
                 }
             }
-            
+
             if (string.IsNullOrEmpty(columnLetters)) return 0;
-            
+
             // Convert column letters to index
             int index = 0;
             for (int i = 0; i < columnLetters.Length; i++)
             {
                 index = index * 26 + (columnLetters[i] - 'A' + 1);
             }
-            
+
             return index - 1; // Convert to zero-based
         }
 
@@ -665,7 +665,7 @@ namespace Backend.Services.Search
         private string CleanHeaderValue(string value)
         {
             if (string.IsNullOrWhiteSpace(value)) return "";
-            
+
             return value.Trim()
                        .Replace("\n", " ")
                        .Replace("\r", " ")
@@ -679,32 +679,32 @@ namespace Backend.Services.Search
         private void CreateEnhancedDataSummary(StringBuilder sb, List<string> headers, List<Row> dataRows, SharedStringTable? sharedStringTable)
         {
             sb.AppendLine("DATA SUMMARY:");
-            
+
             for (int colIndex = 0; colIndex < headers.Count; colIndex++)
             {
                 if (string.IsNullOrWhiteSpace(headers[colIndex]) || headers[colIndex].StartsWith("Column_")) continue;
-                
+
                 var columnValues = dataRows.Select(row =>
                 {
                     var rowData = GetRowDataMapped(row, headers.Count, sharedStringTable);
                     return colIndex < rowData.Count ? rowData[colIndex] : "";
                 }).Where(v => !string.IsNullOrWhiteSpace(v)).ToList();
-                
+
                 if (columnValues.Any())
                 {
                     var uniqueCount = columnValues.Distinct().Count();
                     var totalCount = columnValues.Count;
                     var dataType = InferDataType(columnValues.Take(10).ToList());
-                    
+
                     sb.AppendLine($"  {headers[colIndex]} ({dataType}): {uniqueCount} unique values out of {totalCount} total");
-                    
+
                     // Show sample unique values for categorical data
                     if (uniqueCount <= 20 && uniqueCount < totalCount * 0.8)
                     {
                         var uniqueValues = columnValues.Distinct().Take(5).ToList();
                         sb.AppendLine($"    Sample values: {string.Join(", ", uniqueValues)}");
                     }
-                    
+
                     // For numeric data, show basic statistics
                     if (dataType == "Numeric" && columnValues.Count > 0)
                     {
@@ -734,29 +734,29 @@ namespace Backend.Services.Search
         private string InferDataType(List<string> sampleValues)
         {
             if (!sampleValues.Any()) return "Empty";
-            
+
             var numericCount = sampleValues.Count(v => double.TryParse(v, out _));
             var dateCount = sampleValues.Count(v => DateTime.TryParse(v, out _));
             var booleanCount = sampleValues.Count(v => v.ToLower() == "true" || v.ToLower() == "false" || v == "1" || v == "0");
-            
+
             var total = sampleValues.Count;
-            
+
             if (booleanCount > total * 0.8) return "Boolean";
             if (numericCount > total * 0.8) return "Numeric";
             if (dateCount > total * 0.8) return "Date";
-            
+
             // Check for specific patterns
             var hasUrls = sampleValues.Any(v => v.StartsWith("http", StringComparison.OrdinalIgnoreCase));
             var hasEmails = sampleValues.Any(v => v.Contains("@") && v.Contains("."));
-            
+
             if (hasUrls) return "URL/Link";
             if (hasEmails) return "Email";
-            
+
             // Check if it looks like an ID field
-            var hasIds = sampleValues.Any(v => v.ToLower().Contains("id") || 
+            var hasIds = sampleValues.Any(v => v.ToLower().Contains("id") ||
                                             (v.Length < 20 && (char.IsDigit(v[0]) || v.Contains("-"))));
             if (hasIds) return "Identifier";
-            
+
             return "Text";
         }
 
@@ -766,9 +766,9 @@ namespace Backend.Services.Search
         private string GetCellValue(Cell cell, SharedStringTable? sharedStringTable)
         {
             if (cell.CellValue == null) return "";
-            
+
             var value = cell.CellValue.InnerText;
-            
+
             // Handle different cell types
             if (cell.DataType != null)
             {
@@ -785,10 +785,10 @@ namespace Backend.Services.Search
                             }
                         }
                         break;
-                        
+
                     case "boolean":
                         return value == "1" ? "TRUE" : "FALSE";
-                        
+
                     case "date":
                         if (double.TryParse(value, out double dateValue))
                         {
@@ -803,7 +803,7 @@ namespace Backend.Services.Search
                             }
                         }
                         break;
-                        
+
                     case "number":
                         // Handle numeric formatting
                         if (double.TryParse(value, out double numValue))
@@ -821,7 +821,7 @@ namespace Backend.Services.Search
                                 }
                                 catch { }
                             }
-                            
+
                             // Format numeric values appropriately
                             if (numValue == Math.Floor(numValue))
                             {
@@ -855,7 +855,7 @@ namespace Backend.Services.Search
                     }
                 }
             }
-            
+
             return value;
         }
 
@@ -866,14 +866,14 @@ namespace Backend.Services.Search
         {
             // Convert sheet name to lowercase for case-insensitive matching
             var lowerSheetName = sheetName.ToLower();
-            
+
             // Check for common summary keywords in the name
             var summaryKeywords = new[] { "summary", "total", "grand", "aggregate", "team", "organization", "overview", "dashboard" };
             if (summaryKeywords.Any(keyword => lowerSheetName.Contains(keyword)))
             {
                 return true;
             }
-            
+
             // Check content for aggregate indicators
             var rows = sheetData.Descendants<Row>().Take(5).ToList(); // Check first few rows only
             foreach (var row in rows)
@@ -885,7 +885,7 @@ namespace Backend.Services.Search
                     {
                         var lowerCellValue = cellValue.ToLower();
                         var aggregateKeywords = new[] { "sum", "count", "avg", "average", "max", "min", "total", "grand total", "subtotal" };
-                        
+
                         if (aggregateKeywords.Any(keyword => lowerCellValue.Contains(keyword)))
                         {
                             return true;
@@ -893,7 +893,7 @@ namespace Backend.Services.Search
                     }
                 }
             }
-            
+
             return false;
         }
     }
