@@ -33,7 +33,7 @@ namespace RAG.API.Controllers
             {
                 // Ensure conversation history is not null
                 var conversationHistory = chatRequest.ConversationHistory ?? new List<ChatHistoryMessage>();
-                
+
                 // Clean conversation history - ensure all content is valid
                 var cleanedHistory = conversationHistory
                     .Where(msg => !string.IsNullOrEmpty(msg.Content))
@@ -41,21 +41,21 @@ namespace RAG.API.Controllers
 
                 // Check document status first to avoid stale data issues
                 var hasUserDocs = await _searchService.HasUserUploadedDocumentsAsync();
-                
+
                 string context;
                 string answer;
-                
+
                 if (hasUserDocs)
                 {
                     // User has uploaded documents - ONLY search in uploaded documents
                     var uploadedResults = await _searchService.SearchInSpecificSourceAsync(chatRequest.Message, "uploaded");
-                    
+
                     if (uploadedResults.Count > 0)
                     {
                         context = string.Join("\n\n", uploadedResults);
                         answer = await _aiService.AskQuestionWithContextAsync(
-                            context, 
-                            chatRequest.Message, 
+                            context,
+                            chatRequest.Message,
                             "uploaded",
                             true,
                             cleanedHistory);
@@ -65,8 +65,8 @@ namespace RAG.API.Controllers
                         // User has documents but none are relevant to this query
                         context = "No relevant information found in your uploaded documents for this question.";
                         answer = await _aiService.AskQuestionWithContextAsync(
-                            context, 
-                            chatRequest.Message, 
+                            context,
+                            chatRequest.Message,
                             "uploaded",
                             true,
                             cleanedHistory);
@@ -76,13 +76,13 @@ namespace RAG.API.Controllers
                 {
                     // No user documents - search Confluence first, then fall back to general knowledge
                     string searchQuery = chatRequest.Message;
-                    
+
                     // Enhanced query expansion for date-based searches
                     if (ContainsDateQuery(chatRequest.Message))
                     {
                         searchQuery = ExpandDateQuery(chatRequest.Message);
                     }
-                    
+
                     // Use date-aware search for date-based queries to prevent mixing information from different time periods
                     List<string> confluenceResults;
                     if (ContainsDateQuery(chatRequest.Message))
@@ -93,7 +93,7 @@ namespace RAG.API.Controllers
                     {
                         confluenceResults = await _searchService.SearchInSpecificSourceAsync(searchQuery, "confluence");
                     }
-                    
+
                     // Check if this is about August 7th, 2025 team updates and inject relevant context
                     var august7Context = GetAugust7th2025Context(chatRequest.Message);
                     if (!string.IsNullOrEmpty(august7Context))
@@ -116,7 +116,7 @@ namespace RAG.API.Controllers
                     {
                         // Confluence search failed - try searching ALL documents without source filter
                         var allResults = await _searchService.SearchRelevantChunksAsync(searchQuery);
-                        
+
                         if (allResults.Count > 0)
                         {
                             // Found information in general search
@@ -145,16 +145,16 @@ namespace RAG.API.Controllers
                             }
                         }
                     }
-                    
+
                     // Generate AI response with the combined context
                     answer = await _aiService.AskQuestionWithContextAsync(
-                        context, 
-                        chatRequest.Message, 
+                        context,
+                        chatRequest.Message,
                         "confluence",
                         false,
                         cleanedHistory);
                 }
-                
+
                 return Ok(new { answer });
             }
             catch (Exception ex)
@@ -182,7 +182,7 @@ namespace RAG.API.Controllers
                 return StatusCode(500, new { error = $"Error getting stats: {ex.Message}" });
             }
         }
-        
+
         private bool ContainsDateQuery(string message)
         {
             var datePatterns = new[]
@@ -195,12 +195,12 @@ namespace RAG.API.Controllers
                 @"august\s+7.*2025", @"aug\s+7.*2025", @"8/7/2025", @"08/07/2025",
                 @"2025.*august\s+7", @"2025.*aug\s+7", @"2025.*8/7", @"2025.*08/07"
             };
-            
-            return datePatterns.Any(pattern => 
-                System.Text.RegularExpressions.Regex.IsMatch(message, pattern, 
+
+            return datePatterns.Any(pattern =>
+                System.Text.RegularExpressions.Regex.IsMatch(message, pattern,
                     System.Text.RegularExpressions.RegexOptions.IgnoreCase));
         }
-        
+
         private string ExpandDateQuery(string message)
         {
             // Expand date queries to include related terms that might be in documents
@@ -214,10 +214,10 @@ namespace RAG.API.Controllers
                 "project handover completion", // Common project terms
                 "acknowledgments contributions team" // Common recognition terms
             };
-            
+
             return string.Join(" ", expandedTerms);
         }
-        
+
         private async Task<List<string>> TryBroaderSearch(string message)
         {
             // Try different search approaches for date-based queries
@@ -232,7 +232,7 @@ namespace RAG.API.Controllers
                 "team updates progress",
                 "maintenance scheduled system"
             };
-            
+
             foreach (var searchTerm in broaderSearches)
             {
                 var results = await _searchService.SearchRelevantChunksAsync(searchTerm);
@@ -241,7 +241,7 @@ namespace RAG.API.Controllers
                     return results;
                 }
             }
-            
+
             return new List<string>();
         }
 
@@ -253,7 +253,7 @@ namespace RAG.API.Controllers
         private string? GetAugust7th2025Context(string message)
         {
             var lowerMessage = message.ToLowerInvariant();
-            
+
             // Check if the message contains August 7th, 2025 or related date patterns
             var datePatterns = new[]
             {
@@ -261,19 +261,19 @@ namespace RAG.API.Controllers
                 "8/7/2025", "08/07/2025", "2025-08-07", "2025/08/07",
                 "august 7", "aug 7", "8/7", "08/07"
             };
-            
+
             // Check if the message contains team update related keywords
             var teamUpdateKeywords = new[]
             {
                 "team update", "team updates", "staff meeting", "meeting", "update"
             };
-            
+
             // Check if the message contains date patterns
             bool containsDate = datePatterns.Any(pattern => lowerMessage.Contains(pattern));
-            
+
             // Check if the message contains team update keywords
             bool containsTeamUpdate = teamUpdateKeywords.Any(keyword => lowerMessage.Contains(keyword));
-            
+
             // If both conditions are met, return the context information for AI processing
             if (containsDate && containsTeamUpdate)
             {
@@ -495,7 +495,7 @@ namespace RAG.API.Controllers
 - Fri 15-Aug: TDG office closed (Independence Day)
 - 27-Jun to 12-Sep: Ashwini Kanthraj Parental Leave";
             }
-            
+
             return null;
         }
     }
@@ -504,16 +504,16 @@ namespace RAG.API.Controllers
     {
         [Required(ErrorMessage = "Message is required")]
         public string Message { get; set; } = string.Empty;
-        
+
         public List<ChatHistoryMessage>? ConversationHistory { get; set; } = new List<ChatHistoryMessage>();
     }
 
     public class ChatHistoryMessage
     {
         public string Content { get; set; } = string.Empty;
-        
+
         public bool IsUser { get; set; }
-        
+
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
     }
 }
