@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { 
   IconButton, 
   Button, 
@@ -189,9 +189,13 @@ const Chat: React.FC<ChatProps> = ({ isSidebarCollapsed: propSidebarCollapsed, o
     }
   }, [handleSaveConversationTitle, handleCancelEditConversation]);
 
-  const conversationsMatchingSearch = conversations.filter(conversation =>
-    conversation.title.toLowerCase().includes(conversationSearchText.toLowerCase())
-  );
+  const conversationsMatchingSearch = useMemo(() => {
+    const normalizedSearchText = conversationSearchText.toLowerCase();
+
+    return conversations.filter(conversation =>
+      conversation.title.toLowerCase().includes(normalizedSearchText)
+    );
+  }, [conversations, conversationSearchText]);
 
   const handleToggleSidebar = useCallback(() => {
     if (onToggleSidebar) {
