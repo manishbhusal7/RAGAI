@@ -37,6 +37,10 @@ const getSidebarToggleIcon = (isCollapsed: boolean) => {
   return isCollapsed ? <MenuIcon fontSize="small" /> : <CloseIcon fontSize="small" />;
 };
 
+const getConversationItemClassName = (isActive: boolean) => {
+  return `conversation-item ${isActive ? 'active' : ''}`;
+};
+
 const Chat: React.FC<ChatProps> = ({ isSidebarCollapsed: propSidebarCollapsed, onToggleSidebar }) => {
   // State variables
   const [userTypingMessage, setUserTypingMessage] = useState('');
@@ -280,7 +284,7 @@ const Chat: React.FC<ChatProps> = ({ isSidebarCollapsed: propSidebarCollapsed, o
                 {conversationsMatchingSearch.map(conversation => (
                   <div
                     key={conversation.id}
-                    className={`conversation-item ${conversation.isActive ? 'active' : ''}`}
+                    className={getConversationItemClassName(conversation.isActive)}
                     onClick={() => handleSwitchConversation(conversation.id)}
                   >
                     <div className="conversation-info">
