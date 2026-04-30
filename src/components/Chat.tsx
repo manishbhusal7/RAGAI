@@ -33,6 +33,10 @@ const getConversationListHeading = (searchText: string, matchingCount: number) =
   return `Found ${matchingCount} chat${matchingCount !== 1 ? 's' : ''}`;
 };
 
+const getSidebarToggleIcon = (isCollapsed: boolean) => {
+  return isCollapsed ? <MenuIcon fontSize="small" /> : <CloseIcon fontSize="small" />;
+};
+
 const Chat: React.FC<ChatProps> = ({ isSidebarCollapsed: propSidebarCollapsed, onToggleSidebar }) => {
   // State variables
   const [userTypingMessage, setUserTypingMessage] = useState('');
@@ -222,7 +226,7 @@ const Chat: React.FC<ChatProps> = ({ isSidebarCollapsed: propSidebarCollapsed, o
             size="small"
             className="sidebar-toggle-button"
           >
-            {isSidebarCollapsed ? <MenuIcon fontSize="small" /> : <CloseIcon fontSize="small" />}
+            {getSidebarToggleIcon(isSidebarCollapsed)}
           </IconButton>
         </div>
         
