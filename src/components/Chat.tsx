@@ -45,6 +45,14 @@ interface ChatEmptyStateProps {
   description: string;
 }
 
+const MessageAvatar: React.FC = () => {
+  return (
+    <div className="message-avatar">
+      <div className="avatar-icon"></div>
+    </div>
+  );
+};
+
 const getConversationListHeading = (searchText: string, matchingCount: number) => {
   if (!searchText) {
     return 'Recent Conversations';
@@ -450,9 +458,7 @@ const Chat: React.FC<ChatProps> = ({ isSidebarCollapsed: propSidebarCollapsed, o
               <div className="message">
                 {/* Show AI avatar for AI messages */}
                 {!message.isUser && (
-                  <div className="message-avatar">
-                    <div className="avatar-icon"></div>
-                  </div>
+                  <MessageAvatar />
                 )}
                 <div className="message-content">
                   <MarkdownRenderer content={message.content} />
@@ -468,9 +474,7 @@ const Chat: React.FC<ChatProps> = ({ isSidebarCollapsed: propSidebarCollapsed, o
           {isAiResponding && (
             <div className="message-container ai-message">
               <div className="message">
-                <div className="message-avatar">
-                  <div className="avatar-icon"></div>
-                </div>
+                <MessageAvatar />
                 <div className="thinking-indicator">
                   <div className="processing-spinner"></div>
                   <span className="thinking-text">AI is analyzing your request</span>
