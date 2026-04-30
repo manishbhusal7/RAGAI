@@ -41,6 +41,10 @@ const getConversationItemClassName = (isActive: boolean) => {
   return `conversation-item ${isActive ? 'active' : ''}`;
 };
 
+const getConversationActionButtonClassName = (action: 'edit' | 'delete', isActive: boolean) => {
+  return `${action}-conversation-button ${isActive ? 'active' : ''}`;
+};
+
 const Chat: React.FC<ChatProps> = ({ isSidebarCollapsed: propSidebarCollapsed, onToggleSidebar }) => {
   // State variables
   const [userTypingMessage, setUserTypingMessage] = useState('');
@@ -312,7 +316,7 @@ const Chat: React.FC<ChatProps> = ({ isSidebarCollapsed: propSidebarCollapsed, o
                           size="small"
                           onClick={(e) => handleStartEditConversation(e, conversation.id, conversation.title)}
                           title="Rename conversation"
-                          className={`edit-conversation-button ${conversation.isActive ? 'active' : ''}`}
+                          className={getConversationActionButtonClassName('edit', conversation.isActive)}
                         >
                           <EditIcon fontSize="small" />
                         </IconButton>
@@ -321,7 +325,7 @@ const Chat: React.FC<ChatProps> = ({ isSidebarCollapsed: propSidebarCollapsed, o
                         size="small"
                         onClick={(e) => handleDeleteConversation(e, conversation.id)}
                         title="Delete conversation"
-                        className={`delete-conversation-button ${conversation.isActive ? 'active' : ''}`}
+                        className={getConversationActionButtonClassName('delete', conversation.isActive)}
                       >
                         <DeleteIcon fontSize="small" />
                       </IconButton>
