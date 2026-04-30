@@ -25,6 +25,13 @@ interface ChatProps {
   onToggleSidebar?: () => void;
 }
 
+interface ConversationSearchSectionProps {
+  conversationCount: number;
+  searchText: string;
+  onSearchTextChange: (value: string) => void;
+  onClearSearch: () => void;
+}
+
 const getConversationListHeading = (searchText: string, matchingCount: number) => {
   if (!searchText) {
     return 'Recent Conversations';
@@ -43,6 +50,42 @@ const getConversationItemClassName = (isActive: boolean) => {
 
 const getConversationActionButtonClassName = (action: 'edit' | 'delete', isActive: boolean) => {
   return `${action}-conversation-button ${isActive ? 'active' : ''}`;
+};
+
+const ConversationSearchSection: React.FC<ConversationSearchSectionProps> = ({
+  conversationCount,
+  searchText,
+  onSearchTextChange,
+  onClearSearch
+}) => {
+  if (conversationCount === 0) {
+    return null;
+  }
+
+  return (
+    <div className="search-section">
+      <div className="search-input-wrapper">
+        <div className="search-icon"></div>
+        <input
+          type="text"
+          placeholder="Search conversations..."
+          value={searchText}
+          onChange={(e) => onSearchTextChange(e.target.value)}
+          className="search-input"
+        />
+        {searchText && (
+          <IconButton
+            size="small"
+            onClick={onClearSearch}
+            title="Clear search"
+            className="clear-search-button"
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        )}
+      </div>
+    </div>
+  );
 };
 
 const Chat: React.FC<ChatProps> = ({ isSidebarCollapsed: propSidebarCollapsed, onToggleSidebar }) => {
@@ -254,30 +297,12 @@ const Chat: React.FC<ChatProps> = ({ isSidebarCollapsed: propSidebarCollapsed, o
             </div>
             
             {/* Search bar for finding conversations */}
-            {conversations.length > 0 && (
-              <div className="search-section">
-                <div className="search-input-wrapper">
-                  <div className="search-icon"></div>
-                  <input
-                    type="text"
-                    placeholder="Search conversations..."
-                    value={conversationSearchText}
-                    onChange={(e) => setConversationSearchText(e.target.value)}
-                    className="search-input"
-                  />
-                  {conversationSearchText && (
-                    <IconButton
-                      size="small"
-                      onClick={() => setConversationSearchText('')}
-                      title="Clear search"
-                      className="clear-search-button"
-                    >
-                      <CloseIcon fontSize="small" />
-                    </IconButton>
-                  )}
-                </div>
-              </div>
-            )}
+            <ConversationSearchSection
+              conversationCount={conversations.length}
+              searchText={conversationSearchText}
+              onSearchTextChange={setConversationSearchText}
+              onClearSearch={() => setConversationSearchText('')}
+            />
             
             {/* List of conversations */}
             {conversationsMatchingSearch.length > 0 && (
