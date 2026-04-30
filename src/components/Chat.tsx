@@ -53,6 +53,28 @@ const MessageAvatar: React.FC = () => {
   );
 };
 
+interface ChatMessageItemProps {
+  message: ChatMessage;
+}
+
+const ChatMessageItem: React.FC<ChatMessageItemProps> = ({ message }) => {
+  return (
+    <div
+      className={`message-container ${message.isUser ? 'user-message' : 'ai-message'}`}
+    >
+      <div className="message">
+        {!message.isUser && <MessageAvatar />}
+        <div className="message-content">
+          <MarkdownRenderer content={message.content} />
+        </div>
+        <div className="message-meta">
+          {message.timestamp.toLocaleTimeString()}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const getConversationListHeading = (searchText: string, matchingCount: number) => {
   if (!searchText) {
     return 'Recent Conversations';
@@ -451,23 +473,7 @@ const Chat: React.FC<ChatProps> = ({ isSidebarCollapsed: propSidebarCollapsed, o
           )}
           
           {currentActiveConversation?.messages.map(message => (
-            <div
-              key={message.id}
-              className={`message-container ${message.isUser ? 'user-message' : 'ai-message'}`}
-            >
-              <div className="message">
-                {/* Show AI avatar for AI messages */}
-                {!message.isUser && (
-                  <MessageAvatar />
-                )}
-                <div className="message-content">
-                  <MarkdownRenderer content={message.content} />
-                </div>
-                <div className="message-meta">
-                  {message.timestamp.toLocaleTimeString()}
-                </div>
-              </div>
-            </div>
+            <ChatMessageItem key={message.id} message={message} />
           ))}
           
           {/* Show enhanced typing indicator when AI is responding */}
