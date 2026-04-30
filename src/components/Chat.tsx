@@ -159,6 +159,70 @@ const ConversationActions: React.FC<ConversationActionsProps> = ({
   );
 };
 
+interface ConversationListItemProps {
+  conversation: {
+    id: string;
+    title: string;
+    isActive: boolean;
+    updatedAt: Date;
+  };
+  isEditing: boolean;
+  editValue: string;
+  onEditValueChange: (value: string) => void;
+  onSaveEdit: () => void;
+  onCancelEdit: () => void;
+  onStartEdit: (e: React.MouseEvent, conversationId: string, currentTitle: string) => void;
+  onDelete: (e: React.MouseEvent, conversationId: string) => void;
+  onSelect: (conversationId: string) => void;
+  onEditKeyDown: (e: React.KeyboardEvent) => void;
+}
+
+const ConversationListItem: React.FC<ConversationListItemProps> = ({
+  conversation,
+  isEditing,
+  editValue,
+  onEditValueChange,
+  onSaveEdit,
+  onCancelEdit,
+  onStartEdit,
+  onDelete,
+  onSelect,
+  onEditKeyDown
+}) => {
+  return (
+    <div
+      key={conversation.id}
+      className={getConversationItemClassName(conversation.isActive)}
+      onClick={() => onSelect(conversation.id)}
+    >
+      <div className="conversation-info">
+        {isEditing ? (
+          <ConversationTitleEditor
+            value={editValue}
+            onChange={onEditValueChange}
+            onBlur={onSaveEdit}
+            onKeyDown={onEditKeyDown}
+            onStopPropagation={(e) => e.stopPropagation()}
+          />
+        ) : (
+          <span className="conversation-title">{conversation.title}</span>
+        )}
+        <span className="conversation-date">
+          {conversation.updatedAt.toLocaleDateString()}
+        </span>
+      </div>
+      <ConversationActions
+        conversationId={conversation.id}
+        title={conversation.title}
+        isActive={conversation.isActive}
+        isEditing={isEditing}
+        onStartEdit={onStartEdit}
+        onDelete={onDelete}
+      />
+    </div>
+  );
+};
+
 const getConversationListHeading = (searchText: string, matchingCount: number) => {
   if (!searchText) {
     return 'Recent Conversations';
@@ -464,36 +528,19 @@ const Chat: React.FC<ChatProps> = ({ isSidebarCollapsed: propSidebarCollapsed, o
                   {getConversationListHeading(conversationSearchText, conversationsMatchingSearch.length)}
                 </h4>
                 {conversationsMatchingSearch.map(conversation => (
-                  <div
+                  <ConversationListItem
                     key={conversation.id}
-                    className={getConversationItemClassName(conversation.isActive)}
-                    onClick={() => handleSwitchConversation(conversation.id)}
-                  >
-                    <div className="conversation-info">
-                      {conversationBeingEdited === conversation.id ? (
-                        <ConversationTitleEditor
-                          value={newConversationTitle}
-                          onChange={setNewConversationTitle}
-                          onBlur={handleSaveConversationTitle}
-                          onKeyDown={handleKeyPressEditTitle}
-                          onStopPropagation={(e) => e.stopPropagation()}
-                        />
-                      ) : (
-                        <span className="conversation-title">{conversation.title}</span>
-                      )}
-                      <span className="conversation-date">
-                        {conversation.updatedAt.toLocaleDateString()}
-                      </span>
-                    </div>
-                    <ConversationActions
-                      conversationId={conversation.id}
-                      title={conversation.title}
-                      isActive={conversation.isActive}
-                      isEditing={conversationBeingEdited === conversation.id}
-                      onStartEdit={handleStartEditConversation}
-                      onDelete={handleDeleteConversation}
-                    />
-                  </div>
+                    conversation={conversation}
+                    isEditing={conversationBeingEdited === conversation.id}
+                    editValue={newConversationTitle}
+                    onEditValueChange={setNewConversationTitle}
+                    onSaveEdit={handleSaveConversationTitle}
+                    onCancelEdit={handleCancelEditConversation}
+                    onStartEdit={handleStartEditConversation}
+                    onDelete={handleDeleteConversation}
+                    onSelect={handleSwitchConversation}
+                    onEditKeyDown={handleKeyPressEditTitle}
+                  />
                 ))}
               </div>
             )}
