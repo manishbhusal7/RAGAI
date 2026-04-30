@@ -40,6 +40,11 @@ interface EmptyStatePanelProps {
   footerText?: string;
 }
 
+interface ChatEmptyStateProps {
+  title: string;
+  description: string;
+}
+
 const getConversationListHeading = (searchText: string, matchingCount: number) => {
   if (!searchText) {
     return 'Recent Conversations';
@@ -109,6 +114,15 @@ const EmptyStatePanel: React.FC<EmptyStatePanelProps> = ({
       <p>{title}</p>
       <span>{description}</span>
       {footerText && <span>{footerText}</span>}
+    </div>
+  );
+};
+
+const ChatEmptyState: React.FC<ChatEmptyStateProps> = ({ title, description }) => {
+  return (
+    <div className="chat-empty-state">
+      <h3>{title}</h3>
+      <p>{description}</p>
     </div>
   );
 };
@@ -414,23 +428,18 @@ const Chat: React.FC<ChatProps> = ({ isSidebarCollapsed: propSidebarCollapsed, o
         <div className="chat-messages" ref={chatMessagesContainerRef}>
           {/* Show empty state if no active conversation */}
           {!currentActiveConversation && (
-            <div className="chat-empty-state">
-              <h3>Welcome to Personal Knowledge Assistant</h3>
-              <p>
-                Start a conversation by typing your question below. I can help you with company documents, 
-                technical resources, and any other questions you might have.
-              </p>
-            </div>
+            <ChatEmptyState
+              title="Welcome to Personal Knowledge Assistant"
+              description="Start a conversation by typing your question below. I can help you with company documents, technical resources, and any other questions you might have."
+            />
           )}
           
           {/* Show empty state if active conversation has no messages */}
           {currentActiveConversation && currentActiveConversation.messages.length === 0 && (
-            <div className="chat-empty-state">
-              <h3>New Conversation</h3>
-              <p>
-                Start chatting by typing your question below. I'm here to help with any questions you might have.
-              </p>
-            </div>
+            <ChatEmptyState
+              title="New Conversation"
+              description="Start chatting by typing your question below. I'm here to help with any questions you might have."
+            />
           )}
           
           {currentActiveConversation?.messages.map(message => (
