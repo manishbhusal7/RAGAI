@@ -25,6 +25,14 @@ interface ChatProps {
   onToggleSidebar?: () => void;
 }
 
+const getConversationListHeading = (searchText: string, matchingCount: number) => {
+  if (!searchText) {
+    return 'Recent Conversations';
+  }
+
+  return `Found ${matchingCount} chat${matchingCount !== 1 ? 's' : ''}`;
+};
+
 const Chat: React.FC<ChatProps> = ({ isSidebarCollapsed: propSidebarCollapsed, onToggleSidebar }) => {
   // State variables
   const [userTypingMessage, setUserTypingMessage] = useState('');
@@ -259,10 +267,7 @@ const Chat: React.FC<ChatProps> = ({ isSidebarCollapsed: propSidebarCollapsed, o
             {conversationsMatchingSearch.length > 0 && (
               <div className="conversations-list">
                 <h4>
-                  {conversationSearchText 
-                    ? `Found ${conversationsMatchingSearch.length} chat${conversationsMatchingSearch.length !== 1 ? 's' : ''}` 
-                    : 'Recent Conversations'
-                  }
+                  {getConversationListHeading(conversationSearchText, conversationsMatchingSearch.length)}
                 </h4>
                 {conversationsMatchingSearch.map(conversation => (
                   <div
