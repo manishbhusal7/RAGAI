@@ -256,6 +256,22 @@ const DocumentListItem: React.FC<DocumentListItemProps> = ({ file, onRemove }) =
   );
 };
 
+const DocumentsEmptyState: React.FC = () => {
+  return (
+    <div className="no-documents-state">
+      <div className="empty-documents-icon"></div>
+      <div className="empty-documents-content">
+        <h4>No documents uploaded</h4>
+        <p>Upload your documents to get started with intelligent Q&A and document analysis.</p>
+        <div className="supported-formats">
+          <span className="formats-label">Supported formats:</span>
+          <span className="formats-list">PDF, DOCX, XLS, XLSX, PPT, PPTX, TXT</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const getConversationListHeading = (searchText: string, matchingCount: number) => {
   if (!searchText) {
     return 'Recent Conversations';
@@ -688,18 +704,7 @@ const Chat: React.FC<ChatProps> = ({ isSidebarCollapsed: propSidebarCollapsed, o
             ))}
           </div>
         ) : (
-          // Show professional empty state when no documents are uploaded
-          <div className="no-documents-state">
-            <div className="empty-documents-icon"></div>
-            <div className="empty-documents-content">
-              <h4>No documents uploaded</h4>
-              <p>Upload your documents to get started with intelligent Q&A and document analysis.</p>
-              <div className="supported-formats">
-                <span className="formats-label">Supported formats:</span>
-                <span className="formats-list">PDF, DOCX, XLS, XLSX, PPT, PPTX, TXT</span>
-              </div>
-            </div>
-          </div>
+          <DocumentsEmptyState />
         )}
       </aside>
     </div>
