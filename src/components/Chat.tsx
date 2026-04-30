@@ -118,6 +118,47 @@ const ConversationTitleEditor: React.FC<ConversationTitleEditorProps> = ({
   );
 };
 
+interface ConversationActionsProps {
+  conversationId: string;
+  title: string;
+  isActive: boolean;
+  isEditing: boolean;
+  onStartEdit: (e: React.MouseEvent, conversationId: string, currentTitle: string) => void;
+  onDelete: (e: React.MouseEvent, conversationId: string) => void;
+}
+
+const ConversationActions: React.FC<ConversationActionsProps> = ({
+  conversationId,
+  title,
+  isActive,
+  isEditing,
+  onStartEdit,
+  onDelete
+}) => {
+  return (
+    <div className="conversation-actions">
+      {!isEditing && (
+        <IconButton
+          size="small"
+          onClick={(e) => onStartEdit(e, conversationId, title)}
+          title="Rename conversation"
+          className={getConversationActionButtonClassName('edit', isActive)}
+        >
+          <EditIcon fontSize="small" />
+        </IconButton>
+      )}
+      <IconButton
+        size="small"
+        onClick={(e) => onDelete(e, conversationId)}
+        title="Delete conversation"
+        className={getConversationActionButtonClassName('delete', isActive)}
+      >
+        <DeleteIcon fontSize="small" />
+      </IconButton>
+    </div>
+  );
+};
+
 const getConversationListHeading = (searchText: string, matchingCount: number) => {
   if (!searchText) {
     return 'Recent Conversations';
@@ -444,26 +485,14 @@ const Chat: React.FC<ChatProps> = ({ isSidebarCollapsed: propSidebarCollapsed, o
                         {conversation.updatedAt.toLocaleDateString()}
                       </span>
                     </div>
-                    <div className="conversation-actions">
-                      {conversationBeingEdited !== conversation.id && (
-                        <IconButton
-                          size="small"
-                          onClick={(e) => handleStartEditConversation(e, conversation.id, conversation.title)}
-                          title="Rename conversation"
-                          className={getConversationActionButtonClassName('edit', conversation.isActive)}
-                        >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                      )}
-                      <IconButton
-                        size="small"
-                        onClick={(e) => handleDeleteConversation(e, conversation.id)}
-                        title="Delete conversation"
-                        className={getConversationActionButtonClassName('delete', conversation.isActive)}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </div>
+                    <ConversationActions
+                      conversationId={conversation.id}
+                      title={conversation.title}
+                      isActive={conversation.isActive}
+                      isEditing={conversationBeingEdited === conversation.id}
+                      onStartEdit={handleStartEditConversation}
+                      onDelete={handleDeleteConversation}
+                    />
                   </div>
                 ))}
               </div>
