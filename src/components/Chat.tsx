@@ -89,6 +89,35 @@ const TypingIndicator: React.FC = () => {
   );
 };
 
+interface ConversationTitleEditorProps {
+  value: string;
+  onChange: (value: string) => void;
+  onBlur: () => void;
+  onKeyDown: (e: React.KeyboardEvent) => void;
+  onStopPropagation: (e: React.MouseEvent) => void;
+}
+
+const ConversationTitleEditor: React.FC<ConversationTitleEditorProps> = ({
+  value,
+  onChange,
+  onBlur,
+  onKeyDown,
+  onStopPropagation
+}) => {
+  return (
+    <input
+      type="text"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      onBlur={onBlur}
+      onKeyDown={onKeyDown}
+      className="conversation-title-input"
+      autoFocus
+      onClick={onStopPropagation}
+    />
+  );
+};
+
 const getConversationListHeading = (searchText: string, matchingCount: number) => {
   if (!searchText) {
     return 'Recent Conversations';
@@ -401,15 +430,12 @@ const Chat: React.FC<ChatProps> = ({ isSidebarCollapsed: propSidebarCollapsed, o
                   >
                     <div className="conversation-info">
                       {conversationBeingEdited === conversation.id ? (
-                        <input
-                          type="text"
+                        <ConversationTitleEditor
                           value={newConversationTitle}
-                          onChange={(e) => setNewConversationTitle(e.target.value)}
+                          onChange={setNewConversationTitle}
                           onBlur={handleSaveConversationTitle}
                           onKeyDown={handleKeyPressEditTitle}
-                          className="conversation-title-input"
-                          autoFocus
-                          onClick={(e) => e.stopPropagation()}
+                          onStopPropagation={(e) => e.stopPropagation()}
                         />
                       ) : (
                         <span className="conversation-title">{conversation.title}</span>
