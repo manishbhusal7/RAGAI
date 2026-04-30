@@ -272,6 +272,41 @@ const DocumentsEmptyState: React.FC = () => {
   );
 };
 
+interface DocumentSidebarHeaderProps {
+  onUploadClick: () => void;
+  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  inputRef: React.RefObject<HTMLInputElement>;
+}
+
+const DocumentSidebarHeader: React.FC<DocumentSidebarHeaderProps> = ({
+  onUploadClick,
+  onFileChange,
+  inputRef
+}) => {
+  return (
+    <div className="document-sidebar-header">
+      <h3>Your Documents</h3>
+      <Button
+        variant="outlined"
+        startIcon={<UploadIcon />}
+        onClick={onUploadClick}
+        size="small"
+        className="upload-button"
+      >
+        Upload
+      </Button>
+      <input
+        ref={inputRef}
+        type="file"
+        multiple
+        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
+        onChange={onFileChange}
+        style={{ display: 'none' }}
+      />
+    </div>
+  );
+};
+
 const getConversationListHeading = (searchText: string, matchingCount: number) => {
   if (!searchText) {
     return 'Recent Conversations';
@@ -674,27 +709,11 @@ const Chat: React.FC<ChatProps> = ({ isSidebarCollapsed: propSidebarCollapsed, o
 
       {/* Right Sidebar - Document Management */}
       <aside className="document-sidebar">
-        <div className="document-sidebar-header">
-          <h3>Your Documents</h3>
-          <Button 
-            variant="outlined" 
-            startIcon={<UploadIcon />}
-            onClick={() => fileUploadInputRef.current?.click()}
-            size="small"
-            className="upload-button"
-          >
-            Upload
-          </Button>
-          {/* Hidden file input */}
-          <input
-            ref={fileUploadInputRef}
-            type="file"
-            multiple
-            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
-            onChange={handleFileUpload}
-            style={{ display: 'none' }}
-          />
-        </div>
+        <DocumentSidebarHeader
+          onUploadClick={() => fileUploadInputRef.current?.click()}
+          onFileChange={handleFileUpload}
+          inputRef={fileUploadInputRef}
+        />
         
         {/* Show uploaded files if any exist */}
         {uploadedFiles.length > 0 ? (
