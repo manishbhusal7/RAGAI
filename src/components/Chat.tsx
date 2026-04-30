@@ -387,11 +387,12 @@ const Chat: React.FC<ChatProps> = ({ isSidebarCollapsed: propSidebarCollapsed, o
             
             {/* Message when search doesn't find any conversations */}
             {conversations.length > 0 && conversationsMatchingSearch.length === 0 && conversationSearchText && (
-              <div className="no-conversations-found">
-                <div className="no-results-icon"></div>
-                <p>No conversations found</p>
-                <span>Try a different search term</span>
-              </div>
+              <EmptyStatePanel
+                className="no-conversations-found"
+                iconClassName="no-results-icon"
+                title="No conversations found"
+                description="Try a different search term"
+              />
             )}
             
             {/* Message when no conversations exist yet */}
