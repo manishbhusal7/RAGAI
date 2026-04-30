@@ -16,7 +16,7 @@ import {
 import './Chat.css';
 import { useConversations } from '../hooks/useConversations';
 import { useDocuments } from '../hooks/useDocuments';
-import { ChatMessage, FileState } from '../types';
+import { ChatMessage, FileRecord, FileState } from '../types';
 import { apiService } from '../services/apiService';
 import MarkdownRenderer from './MarkdownRenderer';
 
@@ -224,12 +224,8 @@ const ConversationListItem: React.FC<ConversationListItemProps> = ({
 };
 
 interface DocumentListItemProps {
-  file: {
-    fileId: string;
-    fileName: string;
-    fileState: FileState;
-  };
-  onRemove: (file: { fileId: string; fileName: string; fileState: FileState }) => void;
+  file: FileRecord;
+  onRemove: (file: FileRecord) => void | Promise<void>;
 }
 
 const DocumentListItem: React.FC<DocumentListItemProps> = ({ file, onRemove }) => {
@@ -278,6 +274,11 @@ interface DocumentSidebarHeaderProps {
   inputRef: React.RefObject<HTMLInputElement>;
 }
 
+interface ConversationSidebarHeaderProps {
+  isSidebarCollapsed: boolean;
+  onToggleSidebar: () => void;
+}
+
 const DocumentSidebarHeader: React.FC<DocumentSidebarHeaderProps> = ({
   onUploadClick,
   onFileChange,
@@ -303,6 +304,30 @@ const DocumentSidebarHeader: React.FC<DocumentSidebarHeaderProps> = ({
         onChange={onFileChange}
         style={{ display: 'none' }}
       />
+    </div>
+  );
+};
+
+const ConversationSidebarHeader: React.FC<ConversationSidebarHeaderProps> = ({
+  isSidebarCollapsed,
+  onToggleSidebar
+}) => {
+  return (
+    <div className="side-panel-header">
+      <div className="company-logo">
+        <div className="company-icon">
+          <ChatIcon />
+        </div>
+        <h3>Conversations</h3>
+      </div>
+      <IconButton
+        onClick={onToggleSidebar}
+        title="Toggle sidebar"
+        size="small"
+        className="sidebar-toggle-button"
+      >
+        {getSidebarToggleIcon(isSidebarCollapsed)}
+      </IconButton>
     </div>
   );
 };
@@ -604,22 +629,10 @@ const Chat: React.FC<ChatProps> = ({ isSidebarCollapsed: propSidebarCollapsed, o
     <div className="chat-layout">
       {/* Left Sidebar */}
       <aside className={`side-panel ${isSidebarCollapsed ? 'collapsed' : ''}`}>
-        <div className="side-panel-header">
-          <div className="company-logo">
-            <div className="company-icon">
-              <ChatIcon />
-            </div>
-            <h3>Conversations</h3>
-          </div>
-          <IconButton 
-            onClick={handleToggleSidebar} 
-            title="Toggle sidebar"
-            size="small"
-            className="sidebar-toggle-button"
-          >
-            {getSidebarToggleIcon(isSidebarCollapsed)}
-          </IconButton>
-        </div>
+        <ConversationSidebarHeader
+          isSidebarCollapsed={isSidebarCollapsed}
+          onToggleSidebar={handleToggleSidebar}
+        />
         
         {!isSidebarCollapsed && (
           <div className="side-panel-content">
