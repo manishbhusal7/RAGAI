@@ -307,6 +307,45 @@ const DocumentSidebarHeader: React.FC<DocumentSidebarHeaderProps> = ({
   );
 };
 
+interface ChatInputSectionProps {
+  value: string;
+  onChange: (value: string) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  disabled: boolean;
+}
+
+const ChatInputSection: React.FC<ChatInputSectionProps> = ({
+  value,
+  onChange,
+  onSubmit,
+  disabled
+}) => {
+  return (
+    <div className="chat-input-container">
+      <form onSubmit={onSubmit}>
+        <div className="chat-input-wrapper">
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder="Ask about company documentation, processes, or any questions..."
+            className="chat-input"
+            disabled={disabled}
+          />
+          <button
+            type="submit"
+            className="btn btn-primary send-button"
+            disabled={!value.trim() || disabled}
+            title="Send message"
+          >
+            <div className="send-icon"></div>
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
 const getConversationListHeading = (searchText: string, matchingCount: number) => {
   if (!searchText) {
     return 'Recent Conversations';
@@ -683,28 +722,12 @@ const Chat: React.FC<ChatProps> = ({ isSidebarCollapsed: propSidebarCollapsed, o
         </div>
         
         {/* Message input area */}
-        <div className="chat-input-container">
-          <form onSubmit={handleSendMessage}>
-            <div className="chat-input-wrapper">
-              <input
-                type="text"
-                value={userTypingMessage}
-                onChange={(e) => setUserTypingMessage(e.target.value)}
-                placeholder="Ask about company documentation, processes, or any questions..."
-                className="chat-input"
-                disabled={isAiResponding}
-              />
-              <button
-                type="submit"
-                className="btn btn-primary send-button"
-                disabled={!userTypingMessage.trim() || isAiResponding}
-                title="Send message"
-              >
-                <div className="send-icon"></div>
-              </button>
-            </div>
-          </form>
-        </div>
+        <ChatInputSection
+          value={userTypingMessage}
+          onChange={setUserTypingMessage}
+          onSubmit={handleSendMessage}
+          disabled={isAiResponding}
+        />
       </main>
 
       {/* Right Sidebar - Document Management */}
