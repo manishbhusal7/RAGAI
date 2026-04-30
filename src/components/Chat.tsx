@@ -223,6 +223,39 @@ const ConversationListItem: React.FC<ConversationListItemProps> = ({
   );
 };
 
+interface DocumentListItemProps {
+  file: {
+    fileId: string;
+    fileName: string;
+    fileState: FileState;
+  };
+  onRemove: (file: { fileId: string; fileName: string; fileState: FileState }) => void;
+}
+
+const DocumentListItem: React.FC<DocumentListItemProps> = ({ file, onRemove }) => {
+  return (
+    <div className="document-item">
+      <div className="document-info">
+        <span className="document-name" title={file.fileName}>{file.fileName}</span>
+        <Chip
+          label={file.fileState === FileState.COMPLETED ? 'Ready' : 'Processing...'}
+          size="small"
+          color={file.fileState === FileState.COMPLETED ? 'success' : 'default'}
+          variant={file.fileState === FileState.COMPLETED ? 'filled' : 'outlined'}
+        />
+      </div>
+      <IconButton
+        size="small"
+        onClick={() => onRemove(file)}
+        title="Remove document"
+        className="remove-document-button"
+      >
+        <CloseIcon fontSize="small" />
+      </IconButton>
+    </div>
+  );
+};
+
 const getConversationListHeading = (searchText: string, matchingCount: number) => {
   if (!searchText) {
     return 'Recent Conversations';
@@ -651,25 +684,7 @@ const Chat: React.FC<ChatProps> = ({ isSidebarCollapsed: propSidebarCollapsed, o
         {uploadedFiles.length > 0 ? (
           <div className="document-list">
             {uploadedFiles.map(file => (
-              <div key={file.fileId} className="document-item">
-                <div className="document-info">
-                  <span className="document-name" title={file.fileName}>{file.fileName}</span>
-                  <Chip 
-                    label={file.fileState === FileState.COMPLETED ? 'Ready' : 'Processing...'}
-                    size="small"
-                    color={file.fileState === FileState.COMPLETED ? 'success' : 'default'}
-                    variant={file.fileState === FileState.COMPLETED ? 'filled' : 'outlined'}
-                  />
-                </div>
-                <IconButton
-                  size="small"
-                  onClick={() => removeFile(file)}
-                  title="Remove document"
-                  className="remove-document-button"
-                >
-                  <CloseIcon fontSize="small" />
-                </IconButton>
-              </div>
+              <DocumentListItem key={file.fileId} file={file} onRemove={removeFile} />
             ))}
           </div>
         ) : (
