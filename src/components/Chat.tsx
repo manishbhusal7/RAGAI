@@ -32,6 +32,14 @@ interface ConversationSearchSectionProps {
   onClearSearch: () => void;
 }
 
+interface EmptyStatePanelProps {
+  className: string;
+  iconClassName: string;
+  title: string;
+  description: string;
+  footerText?: string;
+}
+
 const getConversationListHeading = (searchText: string, matchingCount: number) => {
   if (!searchText) {
     return 'Recent Conversations';
@@ -84,6 +92,23 @@ const ConversationSearchSection: React.FC<ConversationSearchSectionProps> = ({
           </IconButton>
         )}
       </div>
+    </div>
+  );
+};
+
+const EmptyStatePanel: React.FC<EmptyStatePanelProps> = ({
+  className,
+  iconClassName,
+  title,
+  description,
+  footerText
+}) => {
+  return (
+    <div className={className}>
+      <div className={iconClassName}></div>
+      <p>{title}</p>
+      <span>{description}</span>
+      {footerText && <span>{footerText}</span>}
     </div>
   );
 };
@@ -371,11 +396,12 @@ const Chat: React.FC<ChatProps> = ({ isSidebarCollapsed: propSidebarCollapsed, o
             
             {/* Message when no conversations exist yet */}
             {conversations.length === 0 && (
-              <div className="empty-conversations">
-                <div className="empty-icon"></div>
-                <p>No conversations yet</p>
-                <span>Start a new chat to begin</span>
-              </div>
+              <EmptyStatePanel
+                className="empty-conversations"
+                iconClassName="empty-icon"
+                title="No conversations yet"
+                description="Start a new chat to begin"
+              />
             )}
           </div>
         )}
