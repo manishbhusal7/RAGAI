@@ -75,6 +75,20 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({ message }) => {
   );
 };
 
+const TypingIndicator: React.FC = () => {
+  return (
+    <div className="message-container ai-message">
+      <div className="message">
+        <MessageAvatar />
+        <div className="thinking-indicator">
+          <div className="processing-spinner"></div>
+          <span className="thinking-text">AI is analyzing your request</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const getConversationListHeading = (searchText: string, matchingCount: number) => {
   if (!searchText) {
     return 'Recent Conversations';
@@ -478,15 +492,7 @@ const Chat: React.FC<ChatProps> = ({ isSidebarCollapsed: propSidebarCollapsed, o
           
           {/* Show enhanced typing indicator when AI is responding */}
           {isAiResponding && (
-            <div className="message-container ai-message">
-              <div className="message">
-                <MessageAvatar />
-                <div className="thinking-indicator">
-                  <div className="processing-spinner"></div>
-                  <span className="thinking-text">AI is analyzing your request</span>
-                </div>
-              </div>
-            </div>
+            <TypingIndicator />
           )}
         </div>
         
