@@ -18,20 +18,22 @@ const getSidebarToggleLabel = (isSidebarCollapsed?: boolean) => {
 const HeaderBrand: React.FC = () => {
   return (
     <Box className="header-brand" sx={{ flex: 1, textAlign: 'center' }}>
-      <Typography
-        variant="h6"
-        component="h1"
-        className="header-title"
-      >
-        {HEADER_TITLE}
-      </Typography>
-      <Typography
-        variant="body2"
-        component="p"
-        className="header-subtitle"
-      >
-        {HEADER_SUBTITLE}
-      </Typography>
+      <div className="header-brand-copy">
+        <Typography
+          variant="h6"
+          component="h1"
+          className="header-title"
+        >
+          {HEADER_TITLE}
+        </Typography>
+        <Typography
+          variant="body2"
+          component="p"
+          className="header-subtitle"
+        >
+          {HEADER_SUBTITLE}
+        </Typography>
+      </div>
     </Box>
   );
 };
@@ -50,6 +52,7 @@ const HeaderSidebarToggle: React.FC<HeaderSidebarToggleProps> = ({
       edge="start"
       onClick={onToggleSidebar}
       title={getSidebarToggleLabel(isSidebarCollapsed)}
+      className="header-toggle-button"
       sx={{
         color: '#6b7280',
         '&:hover': {
@@ -65,7 +68,7 @@ const HeaderSidebarToggle: React.FC<HeaderSidebarToggleProps> = ({
 
 const HeaderToolbarLayout: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarCollapsed }) => {
   return (
-    <Toolbar sx={{ maxWidth: 1400, margin: '0 auto', width: '100%', justifyContent: 'space-between' }}>
+    <Toolbar className="header-toolbar" sx={{ maxWidth: 1400, margin: '0 auto', width: '100%', justifyContent: 'space-between' }}>
       {onToggleSidebar && (
         <HeaderSidebarToggle
           onToggleSidebar={onToggleSidebar}
@@ -75,7 +78,7 @@ const HeaderToolbarLayout: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebar
 
       <HeaderBrand />
 
-      <Box sx={{ width: 48 }} />
+      <Box className="header-spacer" sx={{ width: 48 }} />
     </Toolbar>
   );
 };
