@@ -63,6 +63,23 @@ const HeaderSidebarToggle: React.FC<HeaderSidebarToggleProps> = ({
   );
 };
 
+const HeaderToolbarLayout: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarCollapsed }) => {
+  return (
+    <Toolbar sx={{ maxWidth: 1400, margin: '0 auto', width: '100%', justifyContent: 'space-between' }}>
+      {onToggleSidebar && (
+        <HeaderSidebarToggle
+          onToggleSidebar={onToggleSidebar}
+          isSidebarCollapsed={isSidebarCollapsed}
+        />
+      )}
+
+      <HeaderBrand />
+
+      <Box sx={{ width: 48 }} />
+    </Toolbar>
+  );
+};
+
 const Header: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarCollapsed }) => {
   return (
     <AppBar 
@@ -75,19 +92,10 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarCollapsed }) 
         color: '#1f2937'
       }}
     >
-      <Toolbar sx={{ maxWidth: 1400, margin: '0 auto', width: '100%', justifyContent: 'space-between' }}>
-        {onToggleSidebar && (
-          <HeaderSidebarToggle
-            onToggleSidebar={onToggleSidebar}
-            isSidebarCollapsed={isSidebarCollapsed}
-          />
-        )}
-        
-        <HeaderBrand />
-        
-        <Box sx={{ width: 48 }}> {/* Spacer to center the title */}
-        </Box>
-      </Toolbar>
+      <HeaderToolbarLayout
+        onToggleSidebar={onToggleSidebar}
+        isSidebarCollapsed={isSidebarCollapsed}
+      />
     </AppBar>
   );
 };
