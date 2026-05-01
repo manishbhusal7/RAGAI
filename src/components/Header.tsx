@@ -36,6 +36,33 @@ const HeaderBrand: React.FC = () => {
   );
 };
 
+interface HeaderSidebarToggleProps {
+  onToggleSidebar: () => void;
+  isSidebarCollapsed?: boolean;
+}
+
+const HeaderSidebarToggle: React.FC<HeaderSidebarToggleProps> = ({
+  onToggleSidebar,
+  isSidebarCollapsed
+}) => {
+  return (
+    <IconButton
+      edge="start"
+      onClick={onToggleSidebar}
+      title={getSidebarToggleLabel(isSidebarCollapsed)}
+      sx={{
+        color: '#6b7280',
+        '&:hover': {
+          backgroundColor: '#f3f4f6',
+          color: '#374151'
+        }
+      }}
+    >
+      <MenuIcon />
+    </IconButton>
+  );
+};
+
 const Header: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarCollapsed }) => {
   return (
     <AppBar 
@@ -50,20 +77,10 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarCollapsed }) 
     >
       <Toolbar sx={{ maxWidth: 1400, margin: '0 auto', width: '100%', justifyContent: 'space-between' }}>
         {onToggleSidebar && (
-          <IconButton
-            edge="start"
-            onClick={onToggleSidebar}
-            title={getSidebarToggleLabel(isSidebarCollapsed)}
-            sx={{
-              color: '#6b7280',
-              '&:hover': {
-                backgroundColor: '#f3f4f6',
-                color: '#374151'
-              }
-            }}
-          >
-            <MenuIcon />
-          </IconButton>
+          <HeaderSidebarToggle
+            onToggleSidebar={onToggleSidebar}
+            isSidebarCollapsed={isSidebarCollapsed}
+          />
         )}
         
         <HeaderBrand />
