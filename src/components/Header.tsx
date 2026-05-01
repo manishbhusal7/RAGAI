@@ -8,6 +8,12 @@ interface HeaderProps {
   isSidebarCollapsed?: boolean;
 }
 
+const HEADER_TITLE = 'Personal Knowledge Assistant';
+
+const getSidebarToggleLabel = (isSidebarCollapsed?: boolean) => {
+  return isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar';
+};
+
 const Header: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarCollapsed }) => {
   return (
     <AppBar 
@@ -25,7 +31,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarCollapsed }) 
           <IconButton
             edge="start"
             onClick={onToggleSidebar}
-            title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={getSidebarToggleLabel(isSidebarCollapsed)}
             sx={{
               color: '#6b7280',
               '&:hover': {
@@ -48,7 +54,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarCollapsed }) 
               fontSize: '1.25rem'
             }}
           >
-            Personal Knowledge Assistant
+            {HEADER_TITLE}
           </Typography>
         </Box>
         
