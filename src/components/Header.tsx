@@ -1,7 +1,7 @@
 import React from 'react';
+import './Header.css';
 import { AppBar, Toolbar, Typography, IconButton } from '@mui/material';
 import { Menu as MenuIcon } from '@mui/icons-material';
-import './Header.css';
 
 interface HeaderProps {
   onToggleSidebar?: () => void;
