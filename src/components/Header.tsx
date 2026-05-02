@@ -52,6 +52,9 @@ const HeaderSidebarToggle: React.FC<HeaderSidebarToggleProps> = ({
       edge="start"
       onClick={onToggleSidebar}
       title={getSidebarToggleLabel(isSidebarCollapsed)}
+      aria-label={getSidebarToggleLabel(isSidebarCollapsed)}
+      aria-controls="sidebar"
+      aria-expanded={!isSidebarCollapsed}
       className="header-toggle-button"
     >
       <MenuIcon />
