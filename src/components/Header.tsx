@@ -17,7 +17,7 @@ const getSidebarToggleLabel = (isSidebarCollapsed?: boolean) => {
 
 const HeaderBrand: React.FC = () => {
   return (
-    <Box className="header-brand" sx={{ flex: 1, textAlign: 'center' }}>
+    <Box className="header-brand">
       <div className="header-brand-copy">
         <Typography
           variant="h6"
