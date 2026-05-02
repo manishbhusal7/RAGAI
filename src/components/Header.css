@@ -1,3 +1,14 @@
+/*
+  Header CSS tokens and layout
+
+  Tokens:
+  - --header-title-color: main title color
+  - --header-subtitle-color: subtitle color
+  - --header-toggle-color: toggle icon color
+  - --header-toggle-hover-color: toggle hover color
+  - --header-toolbar-gap: horizontal gap in toolbar
+*/
+
 /* Header layout and presentation */
 .app-header {
   z-index: 1100 !important;
