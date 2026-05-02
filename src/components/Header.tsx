@@ -82,11 +82,6 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarCollapsed }) 
       position="sticky" 
       className="app-header"
       elevation={0}
-      sx={{
-        backgroundColor: '#ffffff',
-        borderBottom: '1px solid #e5e7eb',
-        color: '#1f2937'
-      }}
     >
       <HeaderToolbarLayout
         onToggleSidebar={onToggleSidebar}

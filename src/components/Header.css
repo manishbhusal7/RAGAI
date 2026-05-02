@@ -1,6 +1,9 @@
 /* Header layout and presentation */
 .app-header {
   z-index: 1100 !important;
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  color: #1f2937 !important;
 }
 
 .header-toolbar {
