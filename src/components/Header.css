@@ -7,6 +7,7 @@
   --header-title-color: #111827;
   --header-subtitle-color: #6b7280;
   --header-toggle-color: #6b7280;
+  --header-toolbar-gap: 1rem;
 }
 
 .header-toolbar {
@@ -17,7 +18,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--header-toolbar-gap);
   box-sizing: border-box;
   padding: 0 1rem;
 }
