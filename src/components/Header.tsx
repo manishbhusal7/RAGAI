@@ -68,7 +68,7 @@ const HeaderSidebarToggle: React.FC<HeaderSidebarToggleProps> = ({
 
 const HeaderToolbarLayout: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarCollapsed }) => {
   return (
-    <Toolbar className="header-toolbar" sx={{ maxWidth: 1400, margin: '0 auto', width: '100%', justifyContent: 'space-between' }}>
+    <Toolbar className="header-toolbar">
       {onToggleSidebar && (
         <HeaderSidebarToggle
           onToggleSidebar={onToggleSidebar}
