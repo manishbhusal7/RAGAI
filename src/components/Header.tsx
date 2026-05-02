@@ -71,7 +71,7 @@ const HeaderToolbarLayout: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebar
 
       <HeaderBrand />
 
-      <Box className="header-spacer" />
+      <div className="header-spacer" />
     </Toolbar>
   );
 };
