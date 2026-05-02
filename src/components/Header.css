@@ -7,6 +7,7 @@
   --header-title-color: #111827;
   --header-subtitle-color: #6b7280;
   --header-toggle-color: #6b7280;
+  --header-toggle-hover-color: #374151;
   --header-toolbar-gap: 1rem;
 }
 
@@ -72,11 +73,12 @@
   flex-shrink: 0;
   border-radius: 999px !important;
   color: var(--header-toggle-color) !important;
+  transition: background-color 150ms ease, color 150ms ease;
 }
 
 .header-toggle-button:hover {
   background-color: rgba(17, 24, 39, 0.05) !important;
-  color: #374151 !important;
+  color: var(--header-toggle-hover-color) !important;
 }
 
 .header-toggle-button:focus-visible {
