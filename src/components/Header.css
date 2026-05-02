@@ -132,6 +132,14 @@
   }
 }
 
+/* Larger screens: increase horizontal padding for breathing room */
+@media (min-width: 1400px) {
+  .header-toolbar {
+    padding: 0 2rem;
+    max-width: 1600px;
+  }
+}
+
 /* Keyboard-only focus outline utility: apply to elements that should show
    a visible outline only when focused by keyboard (uses :focus-visible).
 */
