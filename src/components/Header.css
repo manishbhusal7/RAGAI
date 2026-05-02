@@ -114,3 +114,9 @@
     width: 2.5rem;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .header-toggle-button {
+    transition: none !important;
+  }
+}
