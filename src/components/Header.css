@@ -47,6 +47,10 @@
   line-height: 1.1 !important;
   letter-spacing: -0.02em !important;
   color: var(--header-title-color) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 48ch !important;
 }
 
 .header-subtitle {
