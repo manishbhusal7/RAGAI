@@ -84,6 +84,8 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarCollapsed }) 
     <AppBar 
       position="sticky" 
       className="app-header"
+      role="banner"
+      aria-label="Application header"
       elevation={0}
     >
       <HeaderToolbarLayout
