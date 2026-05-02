@@ -17,10 +17,11 @@ const getSidebarToggleLabel = (isSidebarCollapsed?: boolean) => {
 
 const HeaderBrand: React.FC = () => {
   return (
-    <div className="header-brand">
+    <div className="header-brand" aria-labelledby="app-header-title app-header-subtitle">
       <div className="header-brand-copy">
         <span className="visually-hidden">Application header</span>
         <Typography
+          id="app-header-title"
           variant="h6"
           component="h1"
           className="header-title"
@@ -28,6 +29,7 @@ const HeaderBrand: React.FC = () => {
           {HEADER_TITLE}
         </Typography>
         <Typography
+          id="app-header-subtitle"
           variant="body2"
           component="p"
           className="header-subtitle"
