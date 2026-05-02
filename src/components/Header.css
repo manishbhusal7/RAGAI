@@ -60,6 +60,13 @@
   color: var(--header-subtitle-color) !important;
 }
 
+/* Keep subtitle concise on narrow layouts */
+.header-subtitle {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 48ch !important;
+}
 /* Screen-reader only helper */
 .visually-hidden {
   position: absolute !important;
