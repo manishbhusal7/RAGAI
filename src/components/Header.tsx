@@ -17,7 +17,7 @@ const getSidebarToggleLabel = (isSidebarCollapsed?: boolean) => {
 
 const HeaderBrand: React.FC = () => {
   return (
-    <Box className="header-brand">
+    <div className="header-brand">
       <div className="header-brand-copy">
         <Typography
           variant="h6"
@@ -34,7 +34,7 @@ const HeaderBrand: React.FC = () => {
           {HEADER_SUBTITLE}
         </Typography>
       </div>
-    </Box>
+    </div>
   );
 };
 
