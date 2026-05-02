@@ -19,6 +19,7 @@ const HeaderBrand: React.FC = () => {
   return (
     <div className="header-brand">
       <div className="header-brand-copy">
+        <span className="visually-hidden">Application header</span>
         <Typography
           variant="h6"
           component="h1"
