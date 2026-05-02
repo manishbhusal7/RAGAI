@@ -131,3 +131,11 @@
     transition: none !important;
   }
 }
+
+/* Keyboard-only focus outline utility: apply to elements that should show
+   a visible outline only when focused by keyboard (uses :focus-visible).
+*/
+.focus-outline-keyboard:focus-visible {
+  outline: 2px solid var(--header-toggle-hover-color) !important;
+  outline-offset: 2px !important;
+}

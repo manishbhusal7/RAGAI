@@ -58,7 +58,7 @@ const HeaderSidebarToggle: React.FC<HeaderSidebarToggleProps> = ({
       aria-label={getSidebarToggleLabel(isSidebarCollapsed)}
       aria-controls="sidebar"
       aria-expanded={!isSidebarCollapsed}
-      className="header-toggle-button"
+      className="header-toggle-button focus-outline-keyboard"
     >
       <MenuIcon />
     </IconButton>
