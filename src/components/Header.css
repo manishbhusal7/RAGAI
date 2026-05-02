@@ -6,6 +6,7 @@
   color: #1f2937 !important;
   --header-title-color: #111827;
   --header-subtitle-color: #6b7280;
+  --header-toggle-color: #6b7280;
 }
 
 .header-toolbar {
@@ -56,7 +57,7 @@
 .header-toggle-button {
   flex-shrink: 0;
   border-radius: 999px !important;
-  color: #6b7280 !important;
+  color: var(--header-toggle-color) !important;
 }
 
 .header-toggle-button:hover {
