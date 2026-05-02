@@ -53,13 +53,6 @@ const HeaderSidebarToggle: React.FC<HeaderSidebarToggleProps> = ({
       onClick={onToggleSidebar}
       title={getSidebarToggleLabel(isSidebarCollapsed)}
       className="header-toggle-button"
-      sx={{
-        color: '#6b7280',
-        '&:hover': {
-          backgroundColor: '#f3f4f6',
-          color: '#374151'
-        }
-      }}
     >
       <MenuIcon />
     </IconButton>
