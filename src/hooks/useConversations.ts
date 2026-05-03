@@ -1,54 +1,102 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Conversation, ChatMessage } from '../types';
+import { getFromLocalStorage, saveToLocalStorage, removeFromLocalStorage } from '../utils/localStorage';
+import { logger, createLogger } from '../utils/logger';
+import { isValidChatMessage } from '../utils/validation';
 
+const STORAGE_KEYS = {
+  CONVERSATIONS: 'conversations',
+  ACTIVE_CONVERSATION_ID: 'activeConversationId',
+} as const;
+
+/**
+ * Custom hook for managing conversation state and persistence
+ * Handles loading, saving, and manipulating conversations with localStorage
+ */
 export const useConversations = () => {
+  const log = createLogger('useConversations');
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
 
   // Load conversations from localStorage on mount
   useEffect(() => {
-    try {
-      const savedConversations = localStorage.getItem('conversations');
-      const savedActiveId = localStorage.getItem('activeConversationId');
+    loadConversations();
+  }, []);
 
-      if (savedConversations) {
-        const parsedConversations = JSON.parse(savedConversations).map((conv: any) => ({
-          ...conv,
-          createdAt: new Date(conv.createdAt),
-          updatedAt: new Date(conv.updatedAt),
-          messages: conv.messages
-            .filter((msg: any) => msg && typeof msg.content === 'string') // Filter out invalid messages
-            .map((msg: any) => ({
-              ...msg,
-              content: String(msg.content).trim(), // Ensure content is string
-              timestamp: new Date(msg.timestamp),
-              isUser: Boolean(msg.isUser) // Ensure boolean type
-            }))
-        }));
+  /**
+   * Load conversations from localStorage with error handling
+   */
+  const loadConversations = useCallback(() => {
+    try {
+      const savedConversations = getFromLocalStorage<any[]>(STORAGE_KEYS.CONVERSATIONS, []);
+      const savedActiveId = getFromLocalStorage<string | null>(STORAGE_KEYS.ACTIVE_CONVERSATION_ID, null);
+
+      if (savedConversations.length > 0) {
+        // Deserialize and validate conversations
+        const parsedConversations = savedConversations
+          .map(conv => deserializeConversation(conv))
+          .filter((conv): conv is Conversation => conv !== null);
 
         setConversations(parsedConversations);
+        log.debug(`Loaded ${parsedConversations.length} conversations`);
 
-        if (savedActiveId && parsedConversations.find((c: Conversation) => c.id === savedActiveId)) {
+        // Set active conversation if valid
+        if (savedActiveId && parsedConversations.some(c => c.id === savedActiveId)) {
           setActiveConversationId(savedActiveId);
         } else if (parsedConversations.length > 0) {
           setActiveConversationId(parsedConversations[0].id);
         }
       }
     } catch (error) {
-      console.error('Error loading conversations - clearing corrupted data:', error);
+      log.error('Error loading conversations', error);
       // Clear corrupted data
-      localStorage.removeItem('conversations');
-      localStorage.removeItem('activeConversationId');
-      setConversations([]);
-      setActiveConversationId(null);
+      clearAllConversations();
     }
-  }, []);
+  }, [log]);
 
-  // Save conversations to localStorage whenever they change
-  const saveConversations = useCallback((convs: Conversation[], activeId: string | null) => {
-    localStorage.setItem('conversations', JSON.stringify(convs));
-    localStorage.setItem('activeConversationId', activeId || '');
-  }, []);
+  /**
+   * Deserialize conversation from storage format
+   */
+  const deserializeConversation = (conv: any): Conversation | null => {
+    try {
+      if (!conv || typeof conv !== 'object') {
+        return null;
+      }
+
+      return {
+        id: String(conv.id),
+        title: String(conv.title || 'Untitled'),
+        createdAt: new Date(conv.createdAt),
+        updatedAt: new Date(conv.updatedAt),
+        messages: Array.isArray(conv.messages)
+          ? conv.messages
+              .filter(msg => isValidChatMessage(msg))
+              .map(msg => ({
+                id: String(msg.id),
+                content: String(msg.content).trim(),
+                isUser: Boolean(msg.isUser),
+                timestamp: new Date(msg.timestamp),
+              }))
+          : [],
+        isActive: Boolean(conv.isActive),
+      };
+    } catch (error) {
+      log.warn('Failed to deserialize conversation', error);
+      return null;
+    }
+  };
+
+  /**
+   * Save conversations to localStorage
+   */
+  const persistConversations = useCallback((convs: Conversation[], activeId: string | null) => {
+    const success1 = saveToLocalStorage(STORAGE_KEYS.CONVERSATIONS, convs);
+    const success2 = saveToLocalStorage(STORAGE_KEYS.ACTIVE_CONVERSATION_ID, activeId);
+
+    if (!success1 || !success2) {
+      log.warn('Failed to persist conversations to localStorage');
+    }
+  }, [log]);
 
   const createNewConversation = useCallback((): string => {
     const newConversation: Conversation = {
@@ -66,13 +114,14 @@ export const useConversations = () => {
         isActive: false
       }));
       const newConversations = [...updatedConversations, newConversation];
-      saveConversations(newConversations, newConversation.id);
+      persistConversations(newConversations, newConversation.id);
       return newConversations;
     });
 
     setActiveConversationId(newConversation.id);
+    log.info(`Created new conversation: ${newConversation.id}`);
     return newConversation.id;
-  }, [saveConversations]);
+  }, [persistConversations, log]);
 
   const switchConversation = useCallback((conversationId: string) => {
     setConversations(prev => {
@@ -80,11 +129,12 @@ export const useConversations = () => {
         ...conv,
         isActive: conv.id === conversationId
       }));
-      saveConversations(updated, conversationId);
+      persistConversations(updated, conversationId);
       return updated;
     });
     setActiveConversationId(conversationId);
-  }, [saveConversations]);
+    log.debug(`Switched to conversation: ${conversationId}`);
+  }, [persistConversations, log]);
 
   const getActiveConversation = useCallback((): Conversation | null => {
     return conversations.find(conv => conv.isActive) || null;
@@ -106,12 +156,12 @@ export const useConversations = () => {
         }
         
         updated[activeIndex] = conv;
-        saveConversations(updated, activeConversationId);
+        persistConversations(updated, activeConversationId);
       }
       
       return updated;
     });
-  }, [activeConversationId, saveConversations]);
+  }, [activeConversationId, persistConversations]);
 
   const deleteConversation = useCallback((conversationId: string) => {
     setConversations(prev => {
@@ -127,18 +177,20 @@ export const useConversations = () => {
             ...conv,
             isActive: conv.id === newActiveId
           }));
-          saveConversations(updatedWithActive, newActiveId);
+          persistConversations(updatedWithActive, newActiveId);
           setActiveConversationId(newActiveId);
+          log.info(`Deleted conversation, switched to: ${newActiveId}`);
           return updatedWithActive;
         } else {
           setActiveConversationId(null);
         }
       }
       
-      saveConversations(updated, activeConversationId);
+      persistConversations(updated, activeConversationId);
+      log.info(`Deleted conversation: ${conversationId}`);
       return updated;
     });
-  }, [activeConversationId, saveConversations]);
+  }, [activeConversationId, persistConversations, log]);
 
   const renameConversation = useCallback((conversationId: string, newTitle: string) => {
     setConversations(prev => {
@@ -147,17 +199,19 @@ export const useConversations = () => {
           ? { ...conv, title: newTitle.trim() || 'Untitled Chat', updatedAt: new Date() }
           : conv
       );
-      saveConversations(updated, activeConversationId);
+      persistConversations(updated, activeConversationId);
+      log.debug(`Renamed conversation: ${conversationId}`);
       return updated;
     });
-  }, [activeConversationId, saveConversations]);
+  }, [activeConversationId, persistConversations, log]);
 
   const clearAllConversations = useCallback(() => {
     setConversations([]);
     setActiveConversationId(null);
-    localStorage.removeItem('conversations');
-    localStorage.removeItem('activeConversationId');
-  }, []);
+    removeFromLocalStorage(STORAGE_KEYS.CONVERSATIONS);
+    removeFromLocalStorage(STORAGE_KEYS.ACTIVE_CONVERSATION_ID);
+    log.info('Cleared all conversations');
+  }, [log]);
 
   return {
     conversations,
@@ -170,4 +224,4 @@ export const useConversations = () => {
     renameConversation,
     clearAllConversations
   };
-}; 
+};
