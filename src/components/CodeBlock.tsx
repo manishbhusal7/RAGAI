@@ -3,6 +3,13 @@ import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import './CodeBlock.css';
 import { LANGUAGE_REGISTRY } from '../constants/syntaxHighlighting';
+import { 
+  CODE_BLOCK_CONFIG, 
+  SYNTAX_HIGHLIGHTER_STYLE, 
+  DEFAULT_CODE_LANGUAGE,
+  CopyIcon,
+  CheckmarkIcon 
+} from '../constants/codeBlock';
 
 // Register all supported languages
 Object.entries(LANGUAGE_REGISTRY).forEach(([language, config]) => {
@@ -10,19 +17,26 @@ Object.entries(LANGUAGE_REGISTRY).forEach(([language, config]) => {
 });
 
 interface CodeBlockProps {
+  /** Code content to display */
   children: string;
+  /** Programming language for syntax highlighting */
   language?: string;
+  /** Whether to render as inline code */
   inline?: boolean;
 }
 
-const CodeBlock: React.FC<CodeBlockProps> = ({ children, language = 'text', inline = false }) => {
+const CodeBlock: React.FC<CodeBlockProps> = ({ 
+  children, 
+  language = DEFAULT_CODE_LANGUAGE, 
+  inline = false 
+}) => {
   const [copied, setCopied] = useState(false);
 
   const copyToClipboard = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(children);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setCopied(false), CODE_BLOCK_CONFIG.COPY_FEEDBACK_DURATION);
     } catch (err) {
       console.error('Failed to copy text: ', err);
     }
@@ -31,7 +45,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ children, language = 'text', inli
   // For inline code
   if (inline) {
     return (
-      <code className="inline-code">
+      <code className={CODE_BLOCK_CONFIG.CLASSES.INLINE_CODE}>
         {children}
       </code>
     );
@@ -39,48 +53,30 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ children, language = 'text', inli
 
   // For code blocks
   return (
-    <div className="code-block-container">
-      <div className="code-block-header">
-        <div className="code-block-info">
-          <div className="code-block-dots">
-            <span className="dot red"></span>
-            <span className="dot yellow"></span>
-            <span className="dot green"></span>
+    <div className={CODE_BLOCK_CONFIG.CLASSES.CONTAINER}>
+      <div className={CODE_BLOCK_CONFIG.CLASSES.HEADER}>
+        <div className={CODE_BLOCK_CONFIG.CLASSES.INFO}>
+          <div className={CODE_BLOCK_CONFIG.CLASSES.DOTS}>
+            <span className={`dot ${CODE_BLOCK_CONFIG.DOTS.RED}`}></span>
+            <span className={`dot ${CODE_BLOCK_CONFIG.DOTS.YELLOW}`}></span>
+            <span className={`dot ${CODE_BLOCK_CONFIG.DOTS.GREEN}`}></span>
           </div>
-          <span className="code-block-language">{language || 'text'}</span>
+          <span className={CODE_BLOCK_CONFIG.CLASSES.LANGUAGE}>{language}</span>
         </div>
         <button 
-          className={`copy-button ${copied ? 'copied' : ''}`}
+          className={`${CODE_BLOCK_CONFIG.CLASSES.BUTTON} ${copied ? CODE_BLOCK_CONFIG.CLASSES.BUTTON_COPIED : ''}`}
           onClick={copyToClipboard}
-          title={copied ? 'Copied!' : 'Copy code'}
+          title={copied ? CODE_BLOCK_CONFIG.TITLES.COPIED : CODE_BLOCK_CONFIG.TITLES.COPY}
         >
-          {copied ? (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="20,6 9,17 4,12"></polyline>
-            </svg>
-          ) : (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2 2v1"></path>
-            </svg>
-          )}
-          <span className="copy-button-text">{copied ? 'Copied!' : 'Copy'}</span>
+          {copied ? <CheckmarkIcon /> : <CopyIcon />}
+          <span className="copy-button-text">{copied ? CODE_BLOCK_CONFIG.TEXT.COPIED : CODE_BLOCK_CONFIG.TEXT.COPY}</span>
         </button>
       </div>
-      <div className="code-block-content">
+      <div className={CODE_BLOCK_CONFIG.CLASSES.CONTENT}>
         <SyntaxHighlighter
           language={language}
           style={tomorrow}
-          customStyle={{
-            margin: 0,
-            padding: 0,
-            background: 'transparent',
-            fontSize: 'inherit',
-            lineHeight: 'inherit',
-            whiteSpace: 'pre-wrap',
-            wordWrap: 'break-word',
-            overflowWrap: 'break-word',
-          }}
+          customStyle={SYNTAX_HIGHLIGHTER_STYLE as React.CSSProperties}
           codeTagProps={{
             style: {
               fontFamily: '"Fira Code", "Consolas", "Monaco", "Courier New", monospace',
@@ -103,4 +99,4 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ children, language = 'text', inli
   );
 };
 
-export default CodeBlock; 
+export default CodeBlock;
