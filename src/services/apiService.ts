@@ -1,16 +1,24 @@
+/**
+ * API Service for communicating with the backend server
+ * Handles all HTTP requests and responses with proper error handling
+ */
+
 import { ChatMessage } from '../types';
 import { addContextIndicator, formatForReadability } from '../utils/textFormatter';
+import { sanitizeText, isValidMessage, isErrorMessage } from '../utils/validation';
+import { logger } from '../utils/logger';
+import { BACKEND_SERVER_URL, API_ENDPOINTS, getEndpointUrl, API_ERROR_MESSAGES } from '../constants/api';
+import { ChatApiResponse, ChatMessageRequest, ConversationHistoryItem, extractChatAnswer } from '../types/api';
 
-// ===== CONFIGURATION SETTINGS =====
+const log = logger;
 
-// The URL where our .NET backend server is running
-const BACKEND_SERVER_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5169';
-
+/**
+ * Service class for API communications with backend
+ * Encapsulates all HTTP requests and response handling
+ */
 class ApiService {
-  
   /**
    * Gets the base URL of the backend server
-   * Useful for error messages and debugging
    */
   getBaseUrl(): string {
     return BACKEND_SERVER_URL;
@@ -18,59 +26,41 @@ class ApiService {
 
   /**
    * Sends a user message to the AI and gets a response back
-   * This is the main method for chat functionality
-   * 
+   * Main method for chat functionality
+   *
    * @param userMessage - The question or message from the user
    * @param relevantDocumentIds - Array of document IDs that might help answer the question
    * @param conversationHistory - Previous messages in the conversation for context
    * @returns Promise with the AI's response text
+   * @throws Error if message is invalid or API request fails
    */
-  async sendChatMessage(userMessage: string, relevantDocumentIds: string[], conversationHistory: ChatMessage[] = []): Promise<string> {
-    const userHasUploadedDocuments = relevantDocumentIds && relevantDocumentIds.length > 0;
+  async sendChatMessage(
+    userMessage: string,
+    relevantDocumentIds: string[] = [],
+    conversationHistory: ChatMessage[] = []
+  ): Promise<string> {
+    const userHasUploadedDocuments = relevantDocumentIds?.length > 0;
 
     try {
       // Validate message before sending
-      const trimmedMessage = String(userMessage).trim();
-      if (!trimmedMessage) {
+      if (!isValidMessage(userMessage)) {
         throw new Error('Message cannot be empty');
       }
 
-      // Helper function to sanitize text content
-      const sanitizeContent = (text: string) => {
-        // Remove emojis and other special characters using a simpler approach
-        return text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '') // Remove emoji surrogate pairs
-                  .replace(/[^\x20-\x7E]/g, '') // Keep only printable ASCII
-                  .trim();
+      log.debug('Sending chat message', { messageLength: userMessage.length });
+
+      // Prepare conversation history for backend (last 4 messages for context)
+      const recentHistory = this.prepareConversationHistory(conversationHistory);
+
+      // Create the request body with proper typing
+      const requestBody: ChatMessageRequest = {
+        Message: userMessage.trim(),
+        ConversationHistory: recentHistory,
+        DocumentIds: relevantDocumentIds,
       };
 
-      // Helper function to check if a message is an error message
-      const isErrorMessage = (content: string) => {
-        return content.startsWith('Error:') || content.includes('Backend error');
-      };
-
-      // Prepare conversation history for backend (last 4 messages for context to stay within token limits)
-      const recentHistory = conversationHistory.slice(-4)
-        .filter(msg => {
-          // Filter out invalid messages and error messages
-          return msg && 
-                 typeof msg.content === 'string' && 
-                 msg.content.trim().length > 0 && 
-                 !isErrorMessage(msg.content);
-        })
-        .map(msg => ({
-          Content: sanitizeContent(String(msg.content)),     // Sanitize and ensure content is always a string
-          IsUser: Boolean(msg.isUser),             // Ensure boolean type
-          Timestamp: new Date().toISOString()  // Use current time for consistency
-        }));
-
-      // Create the request body
-      const requestBody = {
-        Message: trimmedMessage,
-        ConversationHistory: recentHistory || []
-      };
-      
-      // Make the HTTP request to our backend
-      const backendResponse = await fetch(`${BACKEND_SERVER_URL}/api/Chat`, {
+      // Make the HTTP request to backend
+      const backendResponse = await fetch(getEndpointUrl('CHAT'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -80,117 +70,173 @@ class ApiService {
 
       if (!backendResponse.ok) {
         const errorText = await backendResponse.text();
-        throw new Error(`Backend error! Status: ${backendResponse.status}, Details: ${errorText}`);
-      }
-
-      // Parse the JSON response from the backend
-      const responseData = await backendResponse.json();
-      
-      // Extract the AI's answer from the response (try both lowercase and uppercase property names)
-      const aiAnswer = responseData.answer || responseData.Answer || 'No response received from AI';
-      
-      // Format the response nicely and add context information
-      return addContextIndicator(aiAnswer, userHasUploadedDocuments);
-      
-    } catch (error) {
-      // Provide helpful error messages based on the type of error
-      if (error instanceof TypeError && error.message.includes('fetch')) {
+        log.error(`Chat API error: ${backendResponse.status}`, { errorText });
         throw new Error(
-          `Cannot connect to backend server at ${BACKEND_SERVER_URL}. ` +
-          `Please ensure your .NET backend is running and accessible.`
+          `Backend error! Status: ${backendResponse.status}, Details: ${errorText}`
         );
       }
-      
-      // Re-throw other errors as-is
-      throw error;
+
+      // Parse the JSON response from backend
+      const responseData: ChatApiResponse = await backendResponse.json();
+
+      // Extract the AI's answer using helper
+      const aiAnswer = extractChatAnswer(responseData);
+
+      // Format response and add context information
+      return addContextIndicator(aiAnswer, userHasUploadedDocuments);
+    } catch (error) {
+      return this.handleApiError(error, 'Failed to send chat message');
     }
   }
 
   /**
+   * Prepares conversation history for API request
+   * @param conversationHistory - Raw conversation history
+   * @returns Formatted conversation history ready for API
+   */
+  private prepareConversationHistory(conversationHistory: ChatMessage[]): ConversationHistoryItem[] {
+    return conversationHistory
+      .slice(-4) // Keep last 4 messages for context
+      .filter(msg => {
+        // Filter out invalid or error messages
+        return (
+          msg &&
+          typeof msg.content === 'string' &&
+          msg.content.trim().length > 0 &&
+          !isErrorMessage(msg.content)
+        );
+      })
+      .map(msg => ({
+        Content: sanitizeText(msg.content),
+        IsUser: Boolean(msg.isUser),
+        Timestamp: new Date().toISOString(),
+      }));
+  }
+
+  /**
    * Uploads a file to the backend for processing
-   * The backend will extract text and make it searchable
-   * 
+   *
    * @param fileToUpload - The file selected by the user
    * @returns Promise with file information (ID and name)
+   * @throws Error if upload fails
    */
   async uploadFile(fileToUpload: File): Promise<{ fileId: string; fileName: string }> {
     try {
+      log.info('Uploading file', { fileName: fileToUpload.name, size: fileToUpload.size });
+
       // Create form data to send the file
       const fileFormData = new FormData();
       fileFormData.append('file', fileToUpload);
-      
-      const uploadResponse = await fetch(`${BACKEND_SERVER_URL}/api/FileUpload`, {
+
+      const uploadResponse = await fetch(getEndpointUrl('UPLOAD'), {
         method: 'POST',
         body: fileFormData,
       });
 
       if (!uploadResponse.ok) {
         const uploadErrorDetails = await uploadResponse.text();
+        log.error(`File upload error: ${uploadResponse.status}`, { errorDetails: uploadErrorDetails });
         throw new Error(`Upload failed! Status: ${uploadResponse.status}`);
       }
 
       const uploadResponseData = await uploadResponse.json();
-      
-      // Backend returns { fileName, message }, we need to map it to our expected format
+
+      log.info('File uploaded successfully', { fileName: uploadResponseData.fileName });
+
+      // Backend returns { fileName, message }, map to expected format
       return {
-        fileId: uploadResponseData.fileName,    // Use fileName as the unique ID
-        fileName: uploadResponseData.fileName   // The actual file name
+        fileId: uploadResponseData.fileName, // Use fileName as unique ID
+        fileName: uploadResponseData.fileName, // The actual file name
       };
-      
     } catch (error) {
-      throw error;
+      return Promise.reject(
+        this.handleApiError(error, 'Failed to upload file')
+      );
     }
   }
 
   /**
    * Deletes a previously uploaded file from the backend
-   * This removes the file from storage and search index
-   * 
+   *
    * @param fileNameToDelete - Name of the file to delete
+   * @throws Error if deletion fails
    */
   async deleteFile(fileNameToDelete: string): Promise<void> {
     try {
-      // Encode the filename to handle special characters in URLs
+      log.info('Deleting file', { fileName: fileNameToDelete });
+
+      // Encode filename to handle special characters in URLs
       const encodedFileName = encodeURIComponent(fileNameToDelete);
-      
-      const deleteResponse = await fetch(`${BACKEND_SERVER_URL}/api/FileUpload/${encodedFileName}`, {
-        method: 'DELETE',
-      });
+
+      const deleteResponse = await fetch(
+        `${getEndpointUrl('UPLOAD')}/${encodedFileName}`,
+        { method: 'DELETE' }
+      );
 
       if (!deleteResponse.ok) {
         const deleteErrorDetails = await deleteResponse.text();
+        log.error(`File delete error: ${deleteResponse.status}`, { errorDetails: deleteErrorDetails });
         throw new Error(`Delete failed! Status: ${deleteResponse.status}`);
       }
-      
+
+      log.info('File deleted successfully', { fileName: fileNameToDelete });
     } catch (error) {
-      throw error;
+      throw this.handleApiError(error, 'Failed to delete file');
     }
   }
 
   /**
    * Gets a list of all files that have been uploaded to the backend
-   * This helps sync the frontend with what's actually stored on the server
-   * 
+   *
    * @returns Promise with array of uploaded file information
+   * @throws Error if request fails
    */
   async getUploadedFiles(): Promise<any[]> {
     try {
-      const filesResponse = await fetch(`${BACKEND_SERVER_URL}/api/FileUpload`);
+      log.debug('Fetching uploaded files');
+
+      const filesResponse = await fetch(getEndpointUrl('UPLOAD'));
 
       if (!filesResponse.ok) {
         const filesErrorDetails = await filesResponse.text();
+        log.error(`Get files error: ${filesResponse.status}`, { errorDetails: filesErrorDetails });
         throw new Error(`Failed to get files! Status: ${filesResponse.status}`);
       }
 
       const filesData = await filesResponse.json();
+      log.debug('Uploaded files retrieved', { count: filesData.length });
+
       return filesData;
-      
     } catch (error) {
-      throw error;
+      throw this.handleApiError(error, 'Failed to fetch uploaded files');
     }
+  }
+
+  /**
+   * Centralized error handling for API errors
+   * @param error - The error that occurred
+   * @param defaultMessage - Default message if error can't be determined
+   * @returns Formatted error message
+   */
+  private handleApiError(error: unknown, defaultMessage: string): string {
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      const message = `Cannot connect to backend at ${BACKEND_SERVER_URL}. ${API_ERROR_MESSAGES.CONNECTION_FAILED}`;
+      log.error('Connection error', { message });
+      return message;
+    }
+
+    if (error instanceof Error) {
+      log.error(defaultMessage, { message: error.message });
+      return error.message;
+    }
+
+    log.error(defaultMessage, { error: String(error) });
+    return defaultMessage;
   }
 }
 
-// Export a single instance that the entire app can use
-// This ensures we only have one ApiService instance across the whole application
-export const apiService = new ApiService(); 
+/**
+ * Single API service instance for the entire application
+ * Ensures only one ApiService instance across the app
+ */
+export const apiService = new ApiService();
